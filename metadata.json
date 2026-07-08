@@ -1,0 +1,6 @@
+{
+  "name": "Centinela",
+  "description": "Módulo Gastos para registrar, editar, eliminar, buscar, filtrar y exportar gastos en Google Sheets",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
