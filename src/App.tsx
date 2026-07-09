@@ -98,7 +98,8 @@ import {
   LayoutDashboard,
   Building2,
   Settings,
-  Upload
+  Upload,
+  Menu
 } from 'lucide-react';
 import ClienteForm from './components/ClienteForm';
 import ProspectoForm from './components/ProspectoForm';
@@ -228,6 +229,14 @@ export default function App() {
   const [renovacionToDelete, setRenovacionToDelete] = useState<Renovacion | null>(null);
   const [tareaToDelete, setTareaToDelete] = useState<Tarea | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Responsive Sidebar Open State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Close sidebar automatically on navigation on smaller devices
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [activeModule]);
 
 
   // Initialize auth
@@ -1202,28 +1211,49 @@ export default function App() {
           </div>
         )}
 
+        {/* Mobile Sidebar Backdrop overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-slate-900/15 backdrop-blur-xs z-30 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar Layout */}
         <aside 
           id="app-sidebar"
-          className="w-64 bg-white/50 backdrop-blur-xl border-r border-white/80 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(46,91,255,0.02)]"
+          className={`fixed inset-y-0 left-0 w-64 bg-white/90 lg:bg-white/50 backdrop-blur-xl border-r border-slate-100 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(46,91,255,0.02)] z-40 transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
         >
           {/* Brand Title with Glowing Emblem */}
-          <div className="p-6 border-b border-slate-100/60 flex items-center space-x-3">
-            <div className="relative flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden shadow-[0_4px_16px_rgba(46,91,255,0.3)] bg-slate-950">
-              <img 
-                src={logoShield} 
-                alt="Centinela Logo" 
-                className="w-full h-full object-cover" 
-                referrerPolicy="no-referrer"
-              />
-              <span className="absolute inset-0 rounded-xl border border-white/20 animate-pulse pointer-events-none" />
+          <div className="p-6 border-b border-slate-100/60 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="relative flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden shadow-[0_4px_16px_rgba(46,91,255,0.3)] bg-slate-950">
+                <img 
+                  src={logoShield} 
+                  alt="Centinela Logo" 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer"
+                />
+                <span className="absolute inset-0 rounded-xl border border-white/20 animate-pulse pointer-events-none" />
+              </div>
+              <div>
+                <span className="font-bold text-lg font-display text-slate-800 tracking-tight block leading-none">Centinela</span>
+                <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">
+                  MANAGEMENT SYSTEM
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="font-bold text-lg font-display text-slate-800 tracking-tight block leading-none">Centinela</span>
-              <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">
-                MANAGEMENT SYSTEM
-              </span>
-            </div>
+
+            {/* Mobile Sidebar Close Button */}
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="lg:hidden p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+              title="Cerrar menú"
+            >
+              <X size={18} />
+            </button>
           </div>
 
           {/* Sidebar Navigation */}
@@ -1440,9 +1470,18 @@ export default function App() {
       <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative">
         
         {/* Workspace Header */}
-        <header className="h-16 border-b border-white/40 bg-white/40 backdrop-blur-md px-6 flex items-center justify-between shrink-0 relative z-20">
-          <div className="flex items-center space-x-3">
-            <h2 className="text-lg font-extrabold text-slate-800 font-display tracking-tight">
+        <header className="h-16 border-b border-white/40 bg-white/40 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between shrink-0 relative z-20">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            {/* Hamburger Menu Button */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 rounded-xl transition-all mr-1 shrink-0"
+              title="Abrir menú"
+            >
+              <Menu size={20} />
+            </button>
+
+            <h2 className="text-base sm:text-lg font-extrabold text-slate-800 font-display tracking-tight truncate">
               {activeModule === 'dashboard' ? 'Dashboard' : activeModule === 'clientes' ? 'Clientes' : activeModule === 'prospectos' ? 'Prospectos' : activeModule === 'ventas' ? 'Ventas' : activeModule === 'renovaciones' ? 'Renovaciones' : activeModule === 'tareas' ? 'Tareas' : 'Gastos'}
             </h2>
             
@@ -1609,7 +1648,7 @@ export default function App() {
         </header>
 
         {/* Workspace Content */}
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
           {error && (
             <div id="workspace-error" className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl text-sm flex items-start space-x-3 shadow-sm">
               <AlertCircle className="shrink-0 mt-0.5 text-rose-500" size={18} />
