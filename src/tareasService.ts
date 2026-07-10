@@ -218,14 +218,21 @@ async function findTareaRowIndexById(accessToken: string, spreadsheetId: string,
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '');
+    throw new Error(`Error de Google Sheets al buscar la tarea (${res.status} ${res.statusText}): ${errorText}`);
+  }
 
   const data = await res.json();
   const rows: string[][] = data.values || [];
 
   for (let i = 0; i < rows.length; i++) {
-    if (rows[i] && rows[i][0] === id) {
-      return i + 1; // 1-based index
+    if (rows[i] && rows[i][0]) {
+      const cellId = String(rows[i][0]).trim().toLowerCase();
+      const targetId = String(id).trim().toLowerCase();
+      if (cellId === targetId) {
+        return i + 1; // 1-based index
+      }
     }
   }
   return null;

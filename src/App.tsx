@@ -1005,7 +1005,7 @@ export default function App() {
       console.error(err);
       // Revert optimistic update
       setTareas(prev => prev.map(t => t.id === tarea.id ? tarea : t));
-      alert('Error al actualizar el estado de la tarea en Google Sheets.');
+      alert('Error al actualizar el estado de la tarea en Google Sheets: ' + (err?.message || err));
     }
   };
 
