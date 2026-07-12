@@ -1374,6 +1374,39 @@ export default function App() {
             )}
           </button>
         </div>
+
+        {/* Socio Tecnológico Credit / Branding */}
+        <div className="mt-8 text-center z-10 animate-in fade-in slide-in-from-bottom-4 delay-200 duration-500">
+          <a 
+            href="https://www.empresarioenlinea.com/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-white/70 hover:bg-white backdrop-blur-md rounded-2xl border border-orange-100 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md group text-xs font-semibold text-slate-600"
+          >
+            <span className="flex items-center space-x-1">
+              <span className="text-[10px] text-slate-400 font-medium">Socio Tecnológico:</span>
+              <span className="text-orange-600 font-bold">EmpresarioPuntoCom</span>
+            </span>
+            <div className="w-6 h-4 flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 100 68" className="w-5 h-3.5 fill-none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M38 10 C25 10 16 19 16 32 C16 45 25 54 38 54 H54 V44 H38 C34 44 30 41 30 37 V35 H48 V27 H30 V25 C30 21 34 18 38 18 H54 V10 H38 Z" fill="#FF6600"/>
+                <path d="M54 13 H80" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="83" cy="13" r="3" fill="#FF6600"/>
+                <path d="M54 21 H62 L68 15 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="81" cy="15" r="3" fill="#FF6600"/>
+                <path d="M48 31 H58 L64 25 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="81" cy="25" r="3" fill="#FF6600"/>
+                <path d="M54 39 H60 L66 33 H74" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="77" cy="33" r="3" fill="#FF6600"/>
+                <path d="M54 47 H62 L68 41 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="81" cy="41" r="3" fill="#FF6600"/>
+                <path d="M54 51 H74" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="77" cy="51" r="3" fill="#FF6600"/>
+              </svg>
+            </div>
+            <ExternalLink size={10} className="text-slate-400 group-hover:text-orange-500 transition-colors" />
+          </a>
+        </div>
       </div>
     );
   }
@@ -1573,6 +1606,59 @@ export default function App() {
             {activeModule === 'tareas' && <span className="w-1.5 h-1.5 bg-[#2E5BFF] rounded-full shadow-[0_0_8px_#2E5BFF]" />}
           </button>
         </nav>
+
+        {/* Tarjeta Promocional: EmpresarioPuntoCom */}
+        <div className="mx-4 my-2.5 p-4 bg-gradient-to-br from-orange-50/70 to-amber-50/40 rounded-2xl border border-orange-100 shadow-[0_4px_20px_rgba(255,102,0,0.02)] space-y-3 relative overflow-hidden group">
+          {/* Sutil fondo decorativo de circuito */}
+          <div className="absolute -right-6 -bottom-6 w-20 h-20 text-orange-500/5 pointer-events-none group-hover:scale-110 group-hover:text-orange-500/8 transition-transform duration-500">
+            <svg viewBox="0 0 100 100" fill="currentColor">
+              <path d="M10 20 h40 L60 40 h30 M10 50 h60 L80 70 h10" stroke="currentColor" strokeWidth="4" fill="none"/>
+            </svg>
+          </div>
+
+          <div className="flex items-start space-x-3 relative z-10">
+            <div className="bg-white p-1 rounded-xl shadow-xs border border-orange-100 shrink-0">
+              <svg viewBox="0 0 100 68" className="w-11 h-7.5 fill-none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M38 10 C25 10 16 19 16 32 C16 45 25 54 38 54 H54 V44 H38 C34 44 30 41 30 37 V35 H48 V27 H30 V25 C30 21 34 18 38 18 H54 V10 H38 Z" fill="#FF6600"/>
+                <path d="M54 13 H80" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="83" cy="13" r="3" fill="#FF6600"/>
+                <path d="M54 21 H62 L68 15 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="81" cy="15" r="3" fill="#FF6600"/>
+                <path d="M48 31 H58 L64 25 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="81" cy="25" r="3" fill="#FF6600"/>
+                <path d="M54 39 H60 L66 33 H74" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="77" cy="33" r="3" fill="#FF6600"/>
+                <path d="M54 47 H62 L68 41 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="81" cy="41" r="3" fill="#FF6600"/>
+                <path d="M54 51 H74" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="77" cy="51" r="3" fill="#FF6600"/>
+              </svg>
+            </div>
+            <div className="space-y-0.5 min-w-0">
+              <h4 className="text-[10px] font-extrabold text-orange-600 tracking-wider uppercase font-sans truncate">
+                EmpresarioPuntoCom
+              </h4>
+              <p className="text-[9px] text-slate-400 font-bold leading-none">
+                Innovación con IA
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2.5 relative z-10">
+            <p className="text-[10.5px] text-slate-600 leading-normal font-medium">
+              ¿Deseas escalar esta app o crear un desarrollo a medida con Inteligencia Artificial?
+            </p>
+            <a
+              href="https://www.empresarioenlinea.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-8 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white text-center font-bold text-[10px] rounded-xl flex items-center justify-center space-x-1.5 shadow-md shadow-orange-500/10 hover:shadow-orange-500/20 transition-all duration-300"
+            >
+              <span>Hablemos del Proyecto</span>
+              <ExternalLink size={11} className="stroke-[2.5]" />
+            </a>
+          </div>
+        </div>
 
         {/* Company section */}
         {user && (
@@ -1819,6 +1905,36 @@ export default function App() {
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* Header Partner Pill */}
+            <a
+              href="https://www.empresarioenlinea.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-white/60 hover:bg-white text-slate-600 hover:text-orange-600 border border-slate-100 hover:border-orange-100 rounded-full transition-all text-xs font-semibold shadow-sm hover:shadow-md group mr-1"
+              title="Visitar EmpresarioPuntoCom"
+            >
+              <div className="w-5 h-3.5 flex items-center justify-center shrink-0">
+                <svg viewBox="0 0 100 68" className="w-full h-full fill-none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M38 10 C25 10 16 19 16 32 C16 45 25 54 38 54 H54 V44 H38 C34 44 30 41 30 37 V35 H48 V27 H30 V25 C30 21 34 18 38 18 H54 V10 H38 Z" fill="#FF6600"/>
+                  <path d="M54 13 H80" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                  <circle cx="83" cy="13" r="3" fill="#FF6600"/>
+                  <path d="M54 21 H62 L68 15 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                  <circle cx="82" cy="15" r="3" fill="#FF6600"/>
+                  <path d="M48 31 H58 L64 25 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                  <circle cx="81" cy="25" r="3" fill="#FF6600"/>
+                  <path d="M54 39 H60 L66 33 H74" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                  <circle cx="77" cy="33" r="3" fill="#FF6600"/>
+                  <path d="M54 47 H62 L68 41 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                  <circle cx="81" cy="41" r="3" fill="#FF6600"/>
+                  <path d="M54 51 H74" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
+                  <circle cx="77" cy="51" r="3" fill="#FF6600"/>
+                </svg>
+              </div>
+              <span className="hidden md:inline">AI Partner:</span>
+              <span className="text-orange-600 group-hover:text-orange-700 font-bold text-[11px] md:text-xs">EmpresarioPuntoCom</span>
+              <ExternalLink size={10} className="text-slate-400 group-hover:text-orange-500 transition-colors" />
+            </a>
+
             {(activeModule === 'dashboard' ||
               (activeModule === 'clientes' && spreadsheetId) || 
               (activeModule === 'prospectos' && prospectosSpreadsheetId) || 
