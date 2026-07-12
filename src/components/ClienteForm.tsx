@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 interface ClienteFormProps {
   clienteInicial?: Cliente | null;
   onClose: () => void;
-  onSave: (cliente: Cliente) => Promise<void>;
+  onSave: (cliente: Cliente, renewalData?: { periodicidad: string; valor: string; fechaRenovacion: string }) => Promise<void>;
   siguienteId: string;
 }
 
@@ -23,6 +23,9 @@ export default function ClienteForm({
   siguienteId,
 }: ClienteFormProps) {
   const [formData, setFormData] = useState<Omit<Cliente, 'id'>>({
+    pais: '',
+    tipoIdentificacion: '',
+    numeroIdentificacion: '',
     empresa: '',
     contacto: '',
     telefono: '',
@@ -39,10 +42,36 @@ export default function ClienteForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Renewal settings states (only for brand new clients)
+  const [periodicidad, setPeriodicidad] = useState<string>('Sin renovación');
+  const [valorRenovacion, setValorRenovacion] = useState<string>('');
+  const [fechaPrimeraRenovacion, setFechaPrimeraRenovacion] = useState<string>('');
+  const [userChangedValorRenovacion, setUserChangedValorRenovacion] = useState(false);
+  const [userChangedFechaPrimeraRenovacion, setUserChangedFechaPrimeraRenovacion] = useState(false);
+
+  useEffect(() => {
+    if (!clienteInicial) {
+      if (!userChangedValorRenovacion) {
+        setValorRenovacion(formData.valor?.toString() || '');
+      }
+    }
+  }, [formData.valor, clienteInicial, userChangedValorRenovacion]);
+
+  useEffect(() => {
+    if (!clienteInicial) {
+      if (!userChangedFechaPrimeraRenovacion) {
+        setFechaPrimeraRenovacion(formData.fechaVencimiento || '');
+      }
+    }
+  }, [formData.fechaVencimiento, clienteInicial, userChangedFechaPrimeraRenovacion]);
+
   useEffect(() => {
     if (clienteInicial) {
       setId(clienteInicial.id);
       setFormData({
+        pais: clienteInicial.pais || '',
+        tipoIdentificacion: clienteInicial.tipoIdentificacion || '',
+        numeroIdentificacion: clienteInicial.numeroIdentificacion || '',
         empresa: clienteInicial.empresa || '',
         contacto: clienteInicial.contacto || '',
         telefono: clienteInicial.telefono || '',
@@ -56,6 +85,21 @@ export default function ClienteForm({
       });
     } else {
       setId(siguienteId);
+      setFormData({
+        pais: '',
+        tipoIdentificacion: '',
+        numeroIdentificacion: '',
+        empresa: '',
+        contacto: '',
+        telefono: '',
+        correo: '',
+        servicio: '',
+        valor: '',
+        fechaInicio: '',
+        fechaVencimiento: '',
+        estado: 'Activo',
+        observaciones: '',
+      });
     }
   }, [clienteInicial, siguienteId]);
 
@@ -82,7 +126,14 @@ export default function ClienteForm({
         id,
         ...formData,
       };
-      await onSave(clienteParaGuardar);
+
+      const renewalData = periodicidad !== 'Sin renovación' ? {
+        periodicidad,
+        valor: valorRenovacion || formData.valor?.toString() || '0',
+        fechaRenovacion: fechaPrimeraRenovacion || formData.fechaVencimiento || new Date().toISOString().split('T')[0],
+      } : undefined;
+
+      await onSave(clienteParaGuardar, renewalData);
     } catch (err: any) {
       setError(err?.message || 'Error al guardar el cliente. Intente nuevamente.');
       setIsSubmitting(false);
@@ -121,6 +172,54 @@ export default function ClienteForm({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* País */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                País
+              </label>
+              <input
+                id="input-pais"
+                type="text"
+                name="pais"
+                value={formData.pais}
+                onChange={handleChange}
+                placeholder="Ej. Chile, Colombia, España"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              />
+            </div>
+
+            {/* Tipo de Identificación */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Tipo de Identificación
+              </label>
+              <input
+                id="input-tipo-identificacion"
+                type="text"
+                name="tipoIdentificacion"
+                value={formData.tipoIdentificacion}
+                onChange={handleChange}
+                placeholder="Ej. RUT, NIT, DNI, RUC"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              />
+            </div>
+
+            {/* Número de Identificación */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Número de Identificación
+              </label>
+              <input
+                id="input-numero-identificacion"
+                type="text"
+                name="numeroIdentificacion"
+                value={formData.numeroIdentificacion}
+                onChange={handleChange}
+                placeholder="Ej. 12.345.678-9, 90.123.456-7"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              />
+            </div>
+
             {/* Empresa */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
@@ -285,6 +384,80 @@ export default function ClienteForm({
               className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
             />
           </div>
+
+          {/* Programación de Renovación (Solo para clientes nuevos) */}
+          {!clienteInicial && (
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3">
+              <div className="flex items-center space-x-2 text-emerald-700">
+                <span className="p-1 bg-emerald-100/60 rounded-lg">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89" />
+                  </svg>
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider font-sans">
+                  Programar Renovación Automática
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Periodicidad */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    Periodicidad
+                  </label>
+                  <select
+                    id="input-periodicidad"
+                    value={periodicidad}
+                    onChange={(e) => setPeriodicidad(e.target.value)}
+                    className="w-full px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-xs bg-white text-slate-700"
+                  >
+                    <option value="Sin renovación">Sin renovación</option>
+                    <option value="Mensual">Mensual</option>
+                    <option value="Trimestral">Trimestral</option>
+                    <option value="Semestral">Semestral</option>
+                    <option value="Anual">Anual</option>
+                  </select>
+                </div>
+
+                {/* Valor Renovación */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    Valor Renovación
+                  </label>
+                  <input
+                    id="input-valor-renovacion"
+                    type="text"
+                    disabled={periodicidad === 'Sin renovación'}
+                    value={valorRenovacion}
+                    onChange={(e) => {
+                      setValorRenovacion(e.target.value);
+                      setUserChangedValorRenovacion(true);
+                    }}
+                    placeholder="Ej. $1,200"
+                    className="w-full px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-xs disabled:bg-slate-100 disabled:text-slate-400 text-slate-700"
+                  />
+                </div>
+
+                {/* Fecha Primera Renovación */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    Fecha Primera Renovación
+                  </label>
+                  <input
+                    id="input-fecha-primera-renovacion"
+                    type="date"
+                    disabled={periodicidad === 'Sin renovación'}
+                    value={fechaPrimeraRenovacion}
+                    onChange={(e) => {
+                      setFechaPrimeraRenovacion(e.target.value);
+                      setUserChangedFechaPrimeraRenovacion(true);
+                    }}
+                    className="w-full px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-xs disabled:bg-slate-100 disabled:text-slate-400 text-slate-700"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Modal Footer */}
           <div className="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3 bg-white">

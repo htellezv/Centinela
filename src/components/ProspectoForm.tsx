@@ -25,6 +25,9 @@ export default function ProspectoForm({
   siguienteId,
 }: ProspectoFormProps) {
   const [formData, setFormData] = useState<Omit<Prospecto, 'id'>>({
+    pais: '',
+    tipoIdentificacion: '',
+    numeroIdentificacion: '',
     empresa: '',
     contacto: '',
     telefono: '',
@@ -45,6 +48,9 @@ export default function ProspectoForm({
     if (prospectoInicial) {
       setId(prospectoInicial.id);
       setFormData({
+        pais: prospectoInicial.pais || '',
+        tipoIdentificacion: prospectoInicial.tipoIdentificacion || '',
+        numeroIdentificacion: prospectoInicial.numeroIdentificacion || '',
         empresa: prospectoInicial.empresa || '',
         contacto: prospectoInicial.contacto || '',
         telefono: prospectoInicial.telefono || '',
@@ -58,6 +64,21 @@ export default function ProspectoForm({
       });
     } else {
       setId(siguienteId);
+      setFormData({
+        pais: '',
+        tipoIdentificacion: '',
+        numeroIdentificacion: '',
+        empresa: '',
+        contacto: '',
+        telefono: '',
+        correo: '',
+        servicioInteres: '',
+        valorEstimado: '',
+        estado: 'Nuevo',
+        ultimoContacto: '',
+        proximoSeguimiento: '',
+        observaciones: '',
+      });
     }
   }, [prospectoInicial, siguienteId]);
 
@@ -123,6 +144,54 @@ export default function ProspectoForm({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* País */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                País
+              </label>
+              <input
+                id="input-prospecto-pais"
+                type="text"
+                name="pais"
+                value={formData.pais}
+                onChange={handleChange}
+                placeholder="Ej. Chile, Colombia, España"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              />
+            </div>
+
+            {/* Tipo de Identificación */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Tipo de Identificación
+              </label>
+              <input
+                id="input-prospecto-tipo-identificacion"
+                type="text"
+                name="tipoIdentificacion"
+                value={formData.tipoIdentificacion}
+                onChange={handleChange}
+                placeholder="Ej. RUT, NIT, DNI, RUC"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              />
+            </div>
+
+            {/* Número de Identificación */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Número de Identificación
+              </label>
+              <input
+                id="input-prospecto-numero-identificacion"
+                type="text"
+                name="numeroIdentificacion"
+                value={formData.numeroIdentificacion}
+                onChange={handleChange}
+                placeholder="Ej. 12.345.678-9, 90.123.456-7"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+              />
+            </div>
+
             {/* Empresa */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">

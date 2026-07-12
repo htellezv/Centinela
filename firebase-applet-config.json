@@ -5,5 +5,6 @@
   "authDomain": "striped-device-454200-n1.firebaseapp.com",
   "storageBucket": "striped-device-454200-n1.firebasestorage.app",
   "messagingSenderId": "396590943130",
-  "measurementId": ""
+  "measurementId": "",
+  "oAuthClientId": "396590943130-e6sb89gn9o627h54mdrblppag4qcp5gu.apps.googleusercontent.com"
 }

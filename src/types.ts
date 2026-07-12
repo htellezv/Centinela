@@ -1,5 +1,8 @@
 export interface Cliente {
   id: string;
+  pais: string;
+  tipoIdentificacion: string;
+  numeroIdentificacion: string;
   empresa: string;
   contacto: string;
   telefono: string;
@@ -14,6 +17,9 @@ export interface Cliente {
 
 export interface Prospecto {
   id: string;
+  pais: string;
+  tipoIdentificacion: string;
+  numeroIdentificacion: string;
   empresa: string;
   contacto: string;
   telefono: string;

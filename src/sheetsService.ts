@@ -68,13 +68,16 @@ export async function createSpreadsheet(accessToken: string): Promise<{ id: stri
 
 // Helper to initialize headers in the spreadsheet
 async function initializeHeaders(accessToken: string, spreadsheetId: string) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Clientes!A1:K1?valueInputOption=USER_ENTERED`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Clientes!A1:N1?valueInputOption=USER_ENTERED`;
   const body = {
-    range: 'Clientes!A1:K1',
+    range: 'Clientes!A1:N1',
     majorDimension: 'ROWS',
     values: [
       [
         'ID',
+        'País',
+        'Tipo Identificación',
+        'Número Identificación',
         'Empresa',
         'Contacto',
         'Teléfono',
@@ -103,6 +106,66 @@ async function initializeHeaders(accessToken: string, spreadsheetId: string) {
   }
 }
 
+// Function to safely migrate Clientes spreadsheet by inserting País, Tipo Identificación and Número Identificación columns after ID
+async function migrateClientesSheet(accessToken: string, spreadsheetId: string) {
+  try {
+    const sheetId = await getSheetIdOfTab(accessToken, spreadsheetId, 'Clientes');
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
+    const body = {
+      requests: [
+        {
+          insertDimension: {
+            range: {
+              sheetId: sheetId,
+              dimension: 'COLUMNS',
+              startIndex: 1, // Insert columns at B, C, D (indices 1, 2, 3)
+              endIndex: 4,
+            },
+            inheritFromBefore: true,
+          },
+        },
+      ],
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Error insertando columnas de migración para Clientes: ${res.statusText}`);
+    }
+
+    // Update the newly inserted headers
+    const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Clientes!B1:D1?valueInputOption=USER_ENTERED`;
+    const updateBody = {
+      range: 'Clientes!B1:D1',
+      majorDimension: 'ROWS',
+      values: [['País', 'Tipo Identificación', 'Número Identificación']],
+    };
+
+    const updateRes = await fetch(updateUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updateBody),
+    });
+
+    if (!updateRes.ok) {
+      throw new Error(`Error actualizando encabezados de migración para Clientes: ${updateRes.statusText}`);
+    }
+  } catch (error) {
+    console.error('Error migrating Clientes sheet:', error);
+    throw error;
+  }
+}
+
 // Fetch the sheetId (gid) for a specific tab name
 export async function getSheetIdOfTab(accessToken: string, spreadsheetId: string, tabName: string): Promise<number> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`;
@@ -127,7 +190,7 @@ export async function getSheetIdOfTab(accessToken: string, spreadsheetId: string
 
 // Fetch and parse all clients
 export async function getClientes(accessToken: string, spreadsheetId: string): Promise<Cliente[]> {
-  const range = 'Clientes!A1:K1000';
+  const range = 'Clientes!A1:N1000';
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
 
   try {
@@ -144,11 +207,50 @@ export async function getClientes(accessToken: string, spreadsheetId: string): P
     }
 
     const data = await res.json();
-    const rows: string[][] = data.values || [];
+    let rows: string[][] = data.values || [];
+
+    if (rows.length === 0) {
+      await initializeHeaders(accessToken, spreadsheetId);
+      return [];
+    }
+
+    // Auto-migration check: If the second column is 'Empresa' instead of 'País', run migration
+    const headers = rows[0] || [];
+    if (headers.length > 0 && headers[1] === 'Empresa') {
+      console.log('Detectada estructura antigua de Clientes. Migrando hoja...');
+      await migrateClientesSheet(accessToken, spreadsheetId);
+      // Re-fetch data after migration
+      const reFetchRes = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (reFetchRes.ok) {
+        const reFetchData = await reFetchRes.json();
+        rows = reFetchData.values || [];
+      } else {
+        throw new Error(`Error al volver a consultar datos tras migración de Clientes: ${reFetchRes.statusText}`);
+      }
+    }
 
     if (rows.length <= 1) {
       return []; // Just header or empty
     }
+
+    // Get current headers to map columns dynamically and robustly
+    const currentHeaders = (rows[0] || []).map(h => String(h || '').trim().toLowerCase());
+    const idxId = currentHeaders.indexOf('id');
+    const idxPais = currentHeaders.indexOf('país');
+    const idxTipoId = currentHeaders.indexOf('tipo identificación');
+    const idxNumId = currentHeaders.indexOf('número identificación');
+    const idxEmpresa = currentHeaders.indexOf('empresa');
+    const idxContacto = currentHeaders.indexOf('contacto');
+    const idxTelefono = currentHeaders.indexOf('teléfono');
+    const idxCorreo = currentHeaders.indexOf('correo');
+    const idxServicio = currentHeaders.indexOf('servicio');
+    const idxValor = currentHeaders.indexOf('valor');
+    const idxFechaInicio = currentHeaders.indexOf('fecha inicio');
+    const idxFechaVenc = currentHeaders.indexOf('fecha vencimiento');
+    const idxEstado = currentHeaders.indexOf('estado');
+    const idxObs = currentHeaders.indexOf('observaciones');
 
     // Map rows (skipping headers)
     const clientes: Cliente[] = [];
@@ -160,17 +262,20 @@ export async function getClientes(accessToken: string, spreadsheetId: string): P
       }
 
       clientes.push({
-        id: row[0] || '',
-        empresa: row[1] || '',
-        contacto: row[2] || '',
-        telefono: row[3] || '',
-        correo: row[4] || '',
-        servicio: row[5] || '',
-        valor: row[6] || '',
-        fechaInicio: row[7] || '',
-        fechaVencimiento: row[8] || '',
-        estado: row[9] || '',
-        observaciones: row[10] || '',
+        id: row[idxId] || '',
+        pais: idxPais !== -1 ? row[idxPais] || '' : '',
+        tipoIdentificacion: idxTipoId !== -1 ? row[idxTipoId] || '' : '',
+        numeroIdentificacion: idxNumId !== -1 ? row[idxNumId] || '' : '',
+        empresa: idxEmpresa !== -1 ? row[idxEmpresa] || '' : '',
+        contacto: idxContacto !== -1 ? row[idxContacto] || '' : '',
+        telefono: idxTelefono !== -1 ? row[idxTelefono] || '' : '',
+        correo: idxCorreo !== -1 ? row[idxCorreo] || '' : '',
+        servicio: idxServicio !== -1 ? row[idxServicio] || '' : '',
+        valor: idxValor !== -1 ? row[idxValor] || '' : '',
+        fechaInicio: idxFechaInicio !== -1 ? row[idxFechaInicio] || '' : '',
+        fechaVencimiento: idxFechaVenc !== -1 ? row[idxFechaVenc] || '' : '',
+        estado: idxEstado !== -1 ? row[idxEstado] || 'Activo' : 'Activo',
+        observaciones: idxObs !== -1 ? row[idxObs] || '' : '',
       });
     }
 
@@ -183,14 +288,17 @@ export async function getClientes(accessToken: string, spreadsheetId: string): P
 
 // Add a new client (append row)
 export async function addCliente(accessToken: string, spreadsheetId: string, cliente: Cliente): Promise<void> {
-  const range = 'Clientes!A:K';
+  const range = 'Clientes!A:N';
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED`;
   const body = {
-    range: 'Clientes!A:K',
+    range: 'Clientes!A:N',
     majorDimension: 'ROWS',
     values: [
       [
         cliente.id,
+        cliente.pais || '',
+        cliente.tipoIdentificacion || '',
+        cliente.numeroIdentificacion || '',
         cliente.empresa,
         cliente.contacto,
         cliente.telefono,
@@ -251,7 +359,7 @@ export async function updateCliente(accessToken: string, spreadsheetId: string, 
       throw new Error(`Cliente con ID ${cliente.id} no encontrado en la hoja.`);
     }
 
-    const range = `Clientes!A${rowNum}:K${rowNum}`;
+    const range = `Clientes!A${rowNum}:N${rowNum}`;
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
     const body = {
       range,
@@ -259,6 +367,9 @@ export async function updateCliente(accessToken: string, spreadsheetId: string, 
       values: [
         [
           cliente.id,
+          cliente.pais || '',
+          cliente.tipoIdentificacion || '',
+          cliente.numeroIdentificacion || '',
           cliente.empresa,
           cliente.contacto,
           cliente.telefono,

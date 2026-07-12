@@ -99,7 +99,10 @@ import {
   Building2,
   Settings,
   Upload,
-  Menu
+  Menu,
+  UserCheck,
+  Mail,
+  Video
 } from 'lucide-react';
 import ClienteForm from './components/ClienteForm';
 import ProspectoForm from './components/ProspectoForm';
@@ -115,6 +118,8 @@ import TareaForm from './components/TareaForm';
 import TareaMetricCards from './components/TareaMetricCards';
 import ReminderModal from './components/ReminderModal';
 import Dashboard from './components/Dashboard';
+import SendEmailModal from './components/SendEmailModal';
+import ScheduleMeetingModal from './components/ScheduleMeetingModal';
 
 export default function App() {
   // Auth state
@@ -230,8 +235,46 @@ export default function App() {
   const [tareaToDelete, setTareaToDelete] = useState<Tarea | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Convert prospecto to cliente modal states
+  const [prospectoToConvert, setProspectoToConvert] = useState<Prospecto | null>(null);
+  const [conversionFechaInicio, setConversionFechaInicio] = useState<string>('');
+  const [conversionFechaVenc, setConversionFechaVenc] = useState<string>('');
+  const [conversionValor, setConversionValor] = useState<string>('');
+  const [isConverting, setIsConverting] = useState(false);
+  const [conversionPeriodicidad, setConversionPeriodicidad] = useState<string>('Sin renovación');
+  const [conversionValorRenovacion, setConversionValorRenovacion] = useState<string>('');
+  const [conversionFechaRenovacion, setConversionFechaRenovacion] = useState<string>('');
+  const [userChangedConversionValorRenovacion, setUserChangedConversionValorRenovacion] = useState(false);
+  const [userChangedConversionFechaRenovacion, setUserChangedConversionFechaRenovacion] = useState(false);
+
+  // Program renewal modal for existing clients
+  const [clienteForRenewal, setClienteForRenewal] = useState<Cliente | null>(null);
+  const [renewModalPeriodicidad, setRenewModalPeriodicidad] = useState<string>('Mensual');
+  const [renewModalValor, setRenewModalValor] = useState<string>('');
+  const [renewModalFecha, setRenewModalFecha] = useState<string>('');
+  const [isSavingRenewModal, setIsSavingRenewModal] = useState(false);
+
+  // Sync conversion renewal values with service defaults
+  useEffect(() => {
+    if (!userChangedConversionValorRenovacion) {
+      setConversionValorRenovacion(conversionValor);
+    }
+  }, [conversionValor, userChangedConversionValorRenovacion]);
+
+  useEffect(() => {
+    if (!userChangedConversionFechaRenovacion) {
+      setConversionFechaRenovacion(conversionFechaVenc);
+    }
+  }, [conversionFechaVenc, userChangedConversionFechaRenovacion]);
+
   // Responsive Sidebar Open State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Email and Meeting modal states
+  const [isSendEmailOpen, setIsSendEmailOpen] = useState(false);
+  const [emailModalTarget, setEmailModalTarget] = useState<{ email: string; name: string } | null>(null);
+  const [isScheduleMeetingOpen, setIsScheduleMeetingOpen] = useState(false);
+  const [meetingModalTarget, setMeetingModalTarget] = useState<{ email: string; name: string } | null>(null);
 
   // Close sidebar automatically on navigation on smaller devices
   useEffect(() => {
@@ -523,7 +566,7 @@ export default function App() {
   };
 
   // Add or Edit client save handler
-  const handleSaveCliente = async (cliente: Cliente) => {
+  const handleSaveCliente = async (cliente: Cliente, renewalData?: { periodicidad: string; valor: string; fechaRenovacion: string }) => {
     if (!token || !spreadsheetId) return;
 
     try {
@@ -535,6 +578,24 @@ export default function App() {
         // Add operation
         await addCliente(token, spreadsheetId, cliente);
         showToast(`Cliente "${cliente.empresa}" agregado exitosamente.`);
+
+        // Create renewal if specified
+        if (renewalData && renovacionesSpreadsheetId) {
+          const nextRenovId = generateNextRenovacionId(renovaciones);
+          const nuevaRenovacion: Renovacion = {
+            id: nextRenovId,
+            cliente: cliente.empresa,
+            servicio: cliente.servicio || 'Servicio',
+            fechaRenovacion: renewalData.fechaRenovacion,
+            valor: renewalData.valor,
+            estado: 'Pendiente'
+          };
+          await addRenovacion(token, renovacionesSpreadsheetId, nuevaRenovacion);
+          
+          // Refresh renovaciones list
+          const listRenov = await getRenovaciones(token, renovacionesSpreadsheetId);
+          setRenovaciones(listRenov);
+        }
       }
 
       // Close modal & reload list
@@ -655,6 +716,97 @@ export default function App() {
       alert('Error al eliminar el prospecto: ' + (err?.message || 'Intente nuevamente.'));
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Open prospect-to-client conversion modal
+  const handleRequestProspectoConversion = (prospecto: Prospecto) => {
+    setProspectoToConvert(prospecto);
+    // Get today's date formatted as YYYY-MM-DD
+    const today = new Date();
+    const formattedToday = today.toISOString().split('T')[0];
+    
+    // Get next year's date formatted as YYYY-MM-DD
+    const nextYear = new Date();
+    nextYear.setFullYear(today.getFullYear() + 1);
+    const formattedNextYear = nextYear.toISOString().split('T')[0];
+
+    setConversionFechaInicio(formattedToday);
+    setConversionFechaVenc(formattedNextYear);
+    setConversionValor(prospecto.valorEstimado || '');
+    
+    // Reset renewal values
+    setConversionPeriodicidad('Sin renovación');
+    setConversionValorRenovacion(prospecto.valorEstimado?.toString() || '');
+    setConversionFechaRenovacion(formattedNextYear);
+    setUserChangedConversionValorRenovacion(false);
+    setUserChangedConversionFechaRenovacion(false);
+  };
+
+  // Confirm and perform prospect-to-client conversion
+  const handleConfirmProspectoConversion = async () => {
+    if (!token || !spreadsheetId || !prospectosSpreadsheetId || !prospectoToConvert) return;
+
+    setIsConverting(true);
+    try {
+      const nuevoClienteId = generateNextId(clientes);
+      const nuevoCliente: Cliente = {
+        id: nuevoClienteId,
+        pais: prospectoToConvert.pais || '',
+        tipoIdentificacion: prospectoToConvert.tipoIdentificacion || '',
+        numeroIdentificacion: prospectoToConvert.numeroIdentificacion || '',
+        empresa: prospectoToConvert.empresa,
+        contacto: prospectoToConvert.contacto,
+        telefono: prospectoToConvert.telefono,
+        correo: prospectoToConvert.correo,
+        servicio: prospectoToConvert.servicioInteres || 'Servicio',
+        valor: conversionValor || '0',
+        fechaInicio: conversionFechaInicio,
+        fechaVencimiento: conversionFechaVenc,
+        estado: 'Activo',
+        observaciones: prospectoToConvert.observaciones || '',
+      };
+
+      // 1. Add to Clientes spreadsheet
+      await addCliente(token, spreadsheetId, nuevoCliente);
+
+      // 1.5 Create renewal if specified
+      if (conversionPeriodicidad !== 'Sin renovación' && renovacionesSpreadsheetId) {
+        const nextRenovId = generateNextRenovacionId(renovaciones);
+        const nuevaRenovacion: Renovacion = {
+          id: nextRenovId,
+          cliente: nuevoCliente.empresa,
+          servicio: nuevoCliente.servicio || 'Servicio',
+          fechaRenovacion: conversionFechaRenovacion || nuevoCliente.fechaVencimiento || new Date().toISOString().split('T')[0],
+          valor: conversionValorRenovacion || nuevoCliente.valor,
+          estado: 'Pendiente'
+        };
+        await addRenovacion(token, renovacionesSpreadsheetId, nuevaRenovacion);
+        
+        // Reload renewals list
+        const listRenov = await getRenovaciones(token, renovacionesSpreadsheetId);
+        setRenovaciones(listRenov);
+      }
+
+      // 2. Delete from Prospectos spreadsheet
+      await deleteProspecto(token, prospectosSpreadsheetId, prospectoToConvert.id);
+
+      showToast(`Prospecto "${prospectoToConvert.empresa}" convertido a Cliente con éxito.`);
+
+      // 3. Clear modal state
+      setProspectoToConvert(null);
+
+      // 4. Reload lists
+      const listCl = await getClientes(token, spreadsheetId);
+      setClientes(listCl);
+
+      const listPr = await getProspectos(token, prospectosSpreadsheetId);
+      setProspectos(listPr);
+    } catch (err: any) {
+      console.error(err);
+      alert('Error al convertir el prospecto a cliente: ' + (err?.message || 'Intente de nuevo.'));
+    } finally {
+      setIsConverting(false);
     }
   };
 
@@ -855,6 +1007,46 @@ export default function App() {
     } catch (err: any) {
       console.error(err);
       throw new Error(err?.message || 'Error al guardar los datos de la renovación.');
+    }
+  };
+
+  // Open programar renovación modal for existing clients
+  const handleOpenProgramarRenovacion = (cliente: Cliente) => {
+    setClienteForRenewal(cliente);
+    setRenewModalPeriodicidad('Mensual');
+    setRenewModalValor(cliente.valor || '');
+    setRenewModalFecha(cliente.fechaVencimiento || new Date().toISOString().split('T')[0]);
+  };
+
+  // Save renewal scheduled from the client panel
+  const handleSaveExistingClientRenewal = async () => {
+    if (!token || !renovacionesSpreadsheetId || !clienteForRenewal) return;
+
+    setIsSavingRenewModal(true);
+    try {
+      const nextRenovId = generateNextRenovacionId(renovaciones);
+      const nuevaRenovacion: Renovacion = {
+        id: nextRenovId,
+        cliente: clienteForRenewal.empresa,
+        servicio: clienteForRenewal.servicio || 'Servicio',
+        fechaRenovacion: renewModalFecha || new Date().toISOString().split('T')[0],
+        valor: renewModalValor || '0',
+        estado: 'Pendiente'
+      };
+      await addRenovacion(token, renovacionesSpreadsheetId, nuevaRenovacion);
+      showToast(`Renovación programada para "${clienteForRenewal.empresa}" exitosamente.`);
+      
+      // Close modal
+      setClienteForRenewal(null);
+
+      // Auto-refresh data
+      const list = await getRenovaciones(token, renovacionesSpreadsheetId);
+      setRenovaciones(list);
+    } catch (err: any) {
+      console.error(err);
+      alert('Error al programar la renovación: ' + (err?.message || 'Intente de nuevo.'));
+    } finally {
+      setIsSavingRenewModal(false);
     }
   };
 
@@ -2053,6 +2245,7 @@ export default function App() {
                           <th className="py-3 px-4">F. Inicio</th>
                           <th className="py-3 px-4">F. Vence</th>
                           <th className="py-3 px-4 text-center">Estado</th>
+                          <th className="py-3 px-4 text-center">Contactar</th>
                           <th className="py-3 px-4 text-right">Acciones</th>
                         </tr>
                       </thead>
@@ -2065,8 +2258,23 @@ export default function App() {
                             <td className="py-3 px-4 font-mono font-medium text-xs text-slate-400">
                               {cliente.id}
                             </td>
-                            <td className="py-3 px-4 font-semibold text-slate-900">
-                              {cliente.empresa}
+                            <td className="py-3 px-4">
+                              <div className="font-semibold text-slate-900">{cliente.empresa}</div>
+                              {(cliente.pais || cliente.tipoIdentificacion || cliente.numeroIdentificacion) && (
+                                <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5 flex-wrap font-medium">
+                                  {cliente.pais && (
+                                    <span className="bg-slate-100 text-slate-600 px-1 py-0.5 rounded uppercase tracking-wider font-semibold text-[9px]">
+                                      {cliente.pais}
+                                    </span>
+                                  )}
+                                  {(cliente.tipoIdentificacion || cliente.numeroIdentificacion) && (
+                                    <span className="text-slate-500">
+                                      {cliente.tipoIdentificacion ? `${cliente.tipoIdentificacion}: ` : ''}
+                                      {cliente.numeroIdentificacion || ''}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </td>
                             <td className="py-3 px-4">
                               {cliente.contacto}
@@ -2111,8 +2319,39 @@ export default function App() {
                                 {cliente.estado}
                               </span>
                             </td>
+                            <td className="py-3 px-4 text-center">
+                              <div className="flex items-center justify-center space-x-1">
+                                <button
+                                  onClick={() => {
+                                    setEmailModalTarget({ email: cliente.correo, name: cliente.contacto || cliente.empresa });
+                                    setIsSendEmailOpen(true);
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                  title="Enviar Correo"
+                                >
+                                  <Mail size={15} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setMeetingModalTarget({ email: cliente.correo, name: cliente.contacto || cliente.empresa });
+                                    setIsScheduleMeetingOpen(true);
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all"
+                                  title="Programar Reunión"
+                                >
+                                  <Video size={15} />
+                                </button>
+                              </div>
+                            </td>
                             <td className="py-3 px-4 text-right">
                               <div className="flex items-center justify-end space-x-1 opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleOpenProgramarRenovacion(cliente)}
+                                  className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                  title="Programar Renovación"
+                                >
+                                  <RefreshCw size={15} />
+                                </button>
                                 <button
                                   onClick={() => handleOpenEditForm(cliente)}
                                   className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-all"
@@ -2275,6 +2514,7 @@ export default function App() {
                           <th className="py-3 px-4">Último contacto</th>
                           <th className="py-3 px-4">Próximo seg.</th>
                           <th className="py-3 px-4 text-center">Estado</th>
+                          <th className="py-3 px-4 text-center">Contactar</th>
                           <th className="py-3 px-4 text-right">Acciones</th>
                         </tr>
                       </thead>
@@ -2287,8 +2527,23 @@ export default function App() {
                             <td className="py-3 px-4 font-mono font-medium text-xs text-slate-400">
                               {p.id}
                             </td>
-                            <td className="py-3 px-4 font-semibold text-slate-900">
-                              {p.empresa}
+                            <td className="py-3 px-4">
+                              <div className="font-semibold text-slate-900">{p.empresa}</div>
+                              {(p.pais || p.tipoIdentificacion || p.numeroIdentificacion) && (
+                                <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5 flex-wrap font-medium">
+                                  {p.pais && (
+                                    <span className="bg-slate-100 text-slate-600 px-1 py-0.5 rounded uppercase tracking-wider font-semibold text-[9px]">
+                                      {p.pais}
+                                    </span>
+                                  )}
+                                  {(p.tipoIdentificacion || p.numeroIdentificacion) && (
+                                    <span className="text-slate-500">
+                                      {p.tipoIdentificacion ? `${p.tipoIdentificacion}: ` : ''}
+                                      {p.numeroIdentificacion || ''}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </td>
                             <td className="py-3 px-4">
                               {p.contacto}
@@ -2343,8 +2598,39 @@ export default function App() {
                                 {p.estado}
                               </span>
                             </td>
+                            <td className="py-3 px-4 text-center">
+                              <div className="flex items-center justify-center space-x-1">
+                                <button
+                                  onClick={() => {
+                                    setEmailModalTarget({ email: p.correo, name: p.contacto || p.empresa });
+                                    setIsSendEmailOpen(true);
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                  title="Enviar Correo"
+                                >
+                                  <Mail size={15} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setMeetingModalTarget({ email: p.correo, name: p.contacto || p.empresa });
+                                    setIsScheduleMeetingOpen(true);
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all"
+                                  title="Programar Reunión"
+                                >
+                                  <Video size={15} />
+                                </button>
+                              </div>
+                            </td>
                             <td className="py-3 px-4 text-right">
                               <div className="flex items-center justify-end space-x-1 opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleRequestProspectoConversion(p)}
+                                  className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                  title="Convertir en Cliente"
+                                >
+                                  <UserCheck size={15} />
+                                </button>
                                 <button
                                   onClick={() => handleOpenEditProspectoForm(p)}
                                   className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-all"
@@ -2748,6 +3034,7 @@ export default function App() {
                           <th className="py-3 px-4">Días restantes</th>
                           <th className="py-3 px-4">Valor</th>
                           <th className="py-3 px-4 text-center">Estado</th>
+                          <th className="py-3 px-4 text-center">Contactar</th>
                           <th className="py-3 px-4 text-right">Acciones</th>
                         </tr>
                       </thead>
@@ -2776,6 +3063,10 @@ export default function App() {
                           } else {
                             daysClass = 'text-emerald-700 bg-emerald-50';
                           }
+
+                          const matchingCliente = clientes.find(c => c.empresa === r.cliente);
+                          const matchingProspecto = prospectos.find(p => p.empresa === r.cliente);
+                          const rowEmail = matchingCliente?.correo || matchingProspecto?.correo || '';
 
                           return (
                             <tr 
@@ -2819,6 +3110,30 @@ export default function App() {
                                   }`} />
                                   {r.estado}
                                 </span>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="flex items-center justify-center space-x-1">
+                                  <button
+                                    onClick={() => {
+                                      setEmailModalTarget({ email: rowEmail, name: r.cliente });
+                                      setIsSendEmailOpen(true);
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                    title="Enviar Correo"
+                                  >
+                                    <Mail size={15} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setMeetingModalTarget({ email: rowEmail, name: r.cliente });
+                                      setIsScheduleMeetingOpen(true);
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all"
+                                    title="Programar Reunión"
+                                  >
+                                    <Video size={15} />
+                                  </button>
+                                </div>
                               </td>
                               <td className="py-3 px-4 text-right">
                                 <div className="flex items-center justify-end space-x-1 opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity">
@@ -3629,6 +3944,199 @@ export default function App() {
         </div>
       )}
 
+      {/* Custom Conversion Confirmation Modal Dialog (Prospectos -> Clientes) */}
+      {prospectoToConvert && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div 
+            id="prospecto-conversion-dialog"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150"
+          >
+            {/* Header */}
+            <div className="p-6 pb-4 border-b border-slate-100 bg-slate-50 flex items-start space-x-3">
+              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                <UserCheck size={22} />
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-slate-800 font-display">
+                  ¿Convertir Prospecto a Cliente?
+                </h4>
+                <p className="text-xs text-slate-500 font-mono mt-0.5">
+                  Prospecto ID: {prospectoToConvert.id}
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Estás a punto de transferir a <strong>{prospectoToConvert.empresa}</strong> (Contacto: {prospectoToConvert.contacto}) de la tabla de Prospectos a la de Clientes Activos.
+              </p>
+
+              {/* País, Tipo ID, Número ID preview if exists */}
+              {(prospectoToConvert.pais || prospectoToConvert.tipoIdentificacion || prospectoToConvert.numeroIdentificacion) && (
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1.5 text-xs text-slate-600">
+                  <div className="font-semibold text-slate-700">Información de Identificación:</div>
+                  {prospectoToConvert.pais && (
+                    <div><span className="font-medium text-slate-500">País:</span> {prospectoToConvert.pais}</div>
+                  )}
+                  {prospectoToConvert.tipoIdentificacion && (
+                    <div><span className="font-medium text-slate-500">Tipo de Identificación:</span> {prospectoToConvert.tipoIdentificacion}</div>
+                  )}
+                  {prospectoToConvert.numeroIdentificacion && (
+                    <div><span className="font-medium text-slate-500">Número de Identificación:</span> {prospectoToConvert.numeroIdentificacion}</div>
+                  )}
+                </div>
+              )}
+
+              {/* Conversion Fields */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Valor de Contrato / Servicio
+                  </label>
+                  <input
+                    type="text"
+                    value={conversionValor}
+                    onChange={(e) => setConversionValor(e.target.value)}
+                    placeholder="Ej. $1,200/mes"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                      Fecha de Inicio
+                    </label>
+                    <input
+                      type="date"
+                      value={conversionFechaInicio}
+                      onChange={(e) => setConversionFechaInicio(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                      Fecha Vencimiento
+                    </label>
+                    <input
+                      type="date"
+                      value={conversionFechaVenc}
+                      onChange={(e) => setConversionFechaVenc(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Programar Renovación (from conversion) */}
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3">
+                <div className="flex items-center space-x-2 text-emerald-700">
+                  <span className="p-1 bg-emerald-100/60 rounded-lg">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89" />
+                    </svg>
+                  </span>
+                  <span className="text-xs font-bold uppercase tracking-wider font-sans">
+                    Programar Renovación
+                  </span>
+                </div>
+                
+                <div className="space-y-3">
+                  {/* Periodicidad */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      Periodicidad de Renovación
+                    </label>
+                    <select
+                      id="input-conversion-periodicidad"
+                      value={conversionPeriodicidad}
+                      onChange={(e) => setConversionPeriodicidad(e.target.value)}
+                      className="w-full px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-xs bg-white text-slate-700"
+                    >
+                      <option value="Sin renovación">Sin renovación</option>
+                      <option value="Mensual">Mensual</option>
+                      <option value="Trimestral">Trimestral</option>
+                      <option value="Semestral">Semestral</option>
+                      <option value="Anual">Anual</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Valor Renovación */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                        Valor de Renovación
+                      </label>
+                      <input
+                        id="input-conversion-valor-renovacion"
+                        type="text"
+                        disabled={conversionPeriodicidad === 'Sin renovación'}
+                        value={conversionValorRenovacion}
+                        onChange={(e) => {
+                          setConversionValorRenovacion(e.target.value);
+                          setUserChangedConversionValorRenovacion(true);
+                        }}
+                        placeholder="Ej. $1,200"
+                        className="w-full px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-xs disabled:bg-slate-100 disabled:text-slate-400 text-slate-700"
+                      />
+                    </div>
+
+                    {/* Fecha Primera Renovación */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                        Fecha Primera Renovación
+                      </label>
+                      <input
+                        id="input-conversion-fecha-renovacion"
+                        type="date"
+                        disabled={conversionPeriodicidad === 'Sin renovación'}
+                        value={conversionFechaRenovacion}
+                        onChange={(e) => {
+                          setConversionFechaRenovacion(e.target.value);
+                          setUserChangedConversionFechaRenovacion(true);
+                        }}
+                        className="w-full px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-xs disabled:bg-slate-100 disabled:text-slate-400 text-slate-700"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end space-x-3">
+              <button
+                id="cancel-conversion-btn"
+                onClick={() => setProspectoToConvert(null)}
+                disabled={isConverting}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                id="confirm-conversion-btn"
+                onClick={handleConfirmProspectoConversion}
+                disabled={isConverting}
+                className="px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm shadow-emerald-600/10 transition-all flex items-center justify-center min-w-[140px] disabled:opacity-50"
+              >
+                {isConverting ? (
+                  <div className="flex items-center space-x-2">
+                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Convirtiendo...</span>
+                  </div>
+                ) : (
+                  'Sí, convertir'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Custom Deletion Confirmation Modal Dialog (Ventas) */}
       {ventaToDelete && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -3918,6 +4426,153 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Custom Programar Renovación Modal Dialog (Existing Clientes) */}
+      {clienteForRenewal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div 
+            id="cliente-renewal-program-dialog"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150"
+          >
+            {/* Header */}
+            <div className="p-6 pb-4 border-b border-slate-100 bg-slate-50 flex items-start space-x-3">
+              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                <svg className="w-5.5 h-5.5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-slate-800 font-display">
+                  Programar Renovación
+                </h4>
+                <p className="text-xs text-slate-500 font-mono mt-0.5">
+                  Cliente: {clienteForRenewal.empresa}
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-1">
+                <div><span className="font-medium text-slate-500">Servicio actual:</span> {clienteForRenewal.servicio}</div>
+                <div><span className="font-medium text-slate-500">Valor actual:</span> {clienteForRenewal.valor}</div>
+                {clienteForRenewal.fechaVencimiento && (
+                  <div><span className="font-medium text-slate-500">Vencimiento del contrato:</span> {clienteForRenewal.fechaVencimiento}</div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {/* Periodicidad */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Periodicidad
+                  </label>
+                  <select
+                    id="renew-modal-periodicidad"
+                    value={renewModalPeriodicidad}
+                    onChange={(e) => setRenewModalPeriodicidad(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm bg-white text-slate-700"
+                  >
+                    <option value="Mensual">Mensual</option>
+                    <option value="Trimestral">Trimestral</option>
+                    <option value="Semestral">Semestral</option>
+                    <option value="Anual">Anual</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Valor Renovación */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                      Valor Renovación
+                    </label>
+                    <input
+                      id="renew-modal-valor"
+                      type="text"
+                      value={renewModalValor}
+                      onChange={(e) => setRenewModalValor(e.target.value)}
+                      placeholder="Ej. $1,200"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                    />
+                  </div>
+
+                  {/* Fecha de Renovación */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                      Fecha de Renovación
+                    </label>
+                    <input
+                      id="renew-modal-fecha"
+                      type="date"
+                      value={renewModalFecha}
+                      onChange={(e) => setRenewModalFecha(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end space-x-3">
+              <button
+                id="cancel-existing-renew-btn"
+                onClick={() => setClienteForRenewal(null)}
+                disabled={isSavingRenewModal}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                id="confirm-existing-renew-btn"
+                onClick={handleSaveExistingClientRenewal}
+                disabled={isSavingRenewModal}
+                className="px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm shadow-emerald-600/10 transition-all flex items-center justify-center min-w-[140px] disabled:opacity-50"
+              >
+                {isSavingRenewModal ? (
+                  <div className="flex items-center space-x-2">
+                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Guardando...</span>
+                  </div>
+                ) : (
+                  'Programar'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSendEmailOpen && emailModalTarget && (
+        <SendEmailModal
+          isOpen={isSendEmailOpen}
+          onClose={() => {
+            setIsSendEmailOpen(false);
+            setEmailModalTarget(null);
+          }}
+          initialTo={emailModalTarget.email}
+          clientName={emailModalTarget.name}
+          accessToken={token}
+          onSuccess={(msg) => showToast(msg)}
+        />
+      )}
+
+      {isScheduleMeetingOpen && meetingModalTarget && (
+        <ScheduleMeetingModal
+          isOpen={isScheduleMeetingOpen}
+          onClose={() => {
+            setIsScheduleMeetingOpen(false);
+            setMeetingModalTarget(null);
+          }}
+          initialEmail={meetingModalTarget.email}
+          clientName={meetingModalTarget.name}
+          accessToken={token}
+          onSuccess={(msg) => showToast(msg)}
+        />
       )}
       </div>
     </div>

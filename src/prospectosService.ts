@@ -68,13 +68,16 @@ export async function createProspectosSpreadsheet(accessToken: string): Promise<
 
 // Helper to initialize headers in the Prospectos spreadsheet
 export async function initializeProspectosHeaders(accessToken: string, spreadsheetId: string) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Prospectos!A1:K1?valueInputOption=USER_ENTERED`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Prospectos!A1:N1?valueInputOption=USER_ENTERED`;
   const body = {
-    range: 'Prospectos!A1:K1',
+    range: 'Prospectos!A1:N1',
     majorDimension: 'ROWS',
     values: [
       [
         'ID',
+        'País',
+        'Tipo Identificación',
+        'Número Identificación',
         'Empresa',
         'Contacto',
         'Teléfono',
@@ -103,6 +106,66 @@ export async function initializeProspectosHeaders(accessToken: string, spreadshe
   }
 }
 
+// Function to safely migrate Prospectos spreadsheet by inserting País, Tipo Identificación and Número Identificación columns after ID
+async function migrateProspectosSheet(accessToken: string, spreadsheetId: string) {
+  try {
+    const sheetId = await getProspectosSheetIdOfTab(accessToken, spreadsheetId, 'Prospectos');
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
+    const body = {
+      requests: [
+        {
+          insertDimension: {
+            range: {
+              sheetId: sheetId,
+              dimension: 'COLUMNS',
+              startIndex: 1, // Insert columns B, C, D (indices 1, 2, 3)
+              endIndex: 4,
+            },
+            inheritFromBefore: true,
+          },
+        },
+      ],
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Error insertando columnas de migración para Prospectos: ${res.statusText}`);
+    }
+
+    // Update the newly inserted headers
+    const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Prospectos!B1:D1?valueInputOption=USER_ENTERED`;
+    const updateBody = {
+      range: 'Prospectos!B1:D1',
+      majorDimension: 'ROWS',
+      values: [['País', 'Tipo Identificación', 'Número Identificación']],
+    };
+
+    const updateRes = await fetch(updateUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updateBody),
+    });
+
+    if (!updateRes.ok) {
+      throw new Error(`Error actualizando encabezados de migración para Prospectos: ${updateRes.statusText}`);
+    }
+  } catch (error) {
+    console.error('Error migrating Prospectos sheet:', error);
+    throw error;
+  }
+}
+
 // Fetch the sheetId (gid) for a specific tab name in the Prospectos spreadsheet
 export async function getProspectosSheetIdOfTab(accessToken: string, spreadsheetId: string, tabName: string): Promise<number> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`;
@@ -127,7 +190,7 @@ export async function getProspectosSheetIdOfTab(accessToken: string, spreadsheet
 
 // Fetch and parse all prospectos
 export async function getProspectos(accessToken: string, spreadsheetId: string): Promise<Prospecto[]> {
-  const range = 'Prospectos!A1:K1000';
+  const range = 'Prospectos!A1:N1000';
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
 
   try {
@@ -144,11 +207,50 @@ export async function getProspectos(accessToken: string, spreadsheetId: string):
     }
 
     const data = await res.json();
-    const rows: string[][] = data.values || [];
+    let rows: string[][] = data.values || [];
+
+    if (rows.length === 0) {
+      await initializeProspectosHeaders(accessToken, spreadsheetId);
+      return [];
+    }
+
+    // Auto-migration check: If the second column is 'Empresa' instead of 'País', run migration
+    const headers = rows[0] || [];
+    if (headers.length > 0 && headers[1] === 'Empresa') {
+      console.log('Detectada estructura antigua de Prospectos. Migrando hoja...');
+      await migrateProspectosSheet(accessToken, spreadsheetId);
+      // Re-fetch data after migration
+      const reFetchRes = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (reFetchRes.ok) {
+        const reFetchData = await reFetchRes.json();
+        rows = reFetchData.values || [];
+      } else {
+        throw new Error(`Error al volver a consultar datos tras migración de Prospectos: ${reFetchRes.statusText}`);
+      }
+    }
 
     if (rows.length <= 1) {
       return []; // Just header or empty
     }
+
+    // Get current headers to map columns dynamically and robustly
+    const currentHeaders = (rows[0] || []).map(h => String(h || '').trim().toLowerCase());
+    const idxId = currentHeaders.indexOf('id');
+    const idxPais = currentHeaders.indexOf('país');
+    const idxTipoId = currentHeaders.indexOf('tipo identificación');
+    const idxNumId = currentHeaders.indexOf('número identificación');
+    const idxEmpresa = currentHeaders.indexOf('empresa');
+    const idxContacto = currentHeaders.indexOf('contacto');
+    const idxTelefono = currentHeaders.indexOf('teléfono');
+    const idxCorreo = currentHeaders.indexOf('correo');
+    const idxServicioInteres = currentHeaders.indexOf('servicio de interés');
+    const idxValorEstimado = currentHeaders.indexOf('valor estimado');
+    const idxEstado = currentHeaders.indexOf('estado');
+    const idxUltimoContacto = currentHeaders.indexOf('último contacto');
+    const idxProximoSeguimiento = currentHeaders.indexOf('próximo seguimiento');
+    const idxObs = currentHeaders.indexOf('observaciones');
 
     // Map rows (skipping headers)
     const prospectos: Prospecto[] = [];
@@ -160,17 +262,20 @@ export async function getProspectos(accessToken: string, spreadsheetId: string):
       }
 
       prospectos.push({
-        id: row[0] || '',
-        empresa: row[1] || '',
-        contacto: row[2] || '',
-        telefono: row[3] || '',
-        correo: row[4] || '',
-        servicioInteres: row[5] || '',
-        valorEstimado: row[6] || '',
-        estado: row[7] || '',
-        ultimoContacto: row[8] || '',
-        proximoSeguimiento: row[9] || '',
-        observaciones: row[10] || '',
+        id: row[idxId] || '',
+        pais: idxPais !== -1 ? row[idxPais] || '' : '',
+        tipoIdentificacion: idxTipoId !== -1 ? row[idxTipoId] || '' : '',
+        numeroIdentificacion: idxNumId !== -1 ? row[idxNumId] || '' : '',
+        empresa: idxEmpresa !== -1 ? row[idxEmpresa] || '' : '',
+        contacto: idxContacto !== -1 ? row[idxContacto] || '' : '',
+        telefono: idxTelefono !== -1 ? row[idxTelefono] || '' : '',
+        correo: idxCorreo !== -1 ? row[idxCorreo] || '' : '',
+        servicioInteres: idxServicioInteres !== -1 ? row[idxServicioInteres] || '' : '',
+        valorEstimado: idxValorEstimado !== -1 ? row[idxValorEstimado] || '' : '',
+        estado: idxEstado !== -1 ? row[idxEstado] || 'Nuevo' : 'Nuevo',
+        ultimoContacto: idxUltimoContacto !== -1 ? row[idxUltimoContacto] || '' : '',
+        proximoSeguimiento: idxProximoSeguimiento !== -1 ? row[idxProximoSeguimiento] || '' : '',
+        observaciones: idxObs !== -1 ? row[idxObs] || '' : '',
       });
     }
 
@@ -183,14 +288,17 @@ export async function getProspectos(accessToken: string, spreadsheetId: string):
 
 // Add a new prospecto (append row)
 export async function addProspecto(accessToken: string, spreadsheetId: string, prospecto: Prospecto): Promise<void> {
-  const range = 'Prospectos!A:K';
+  const range = 'Prospectos!A:N';
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED`;
   const body = {
-    range: 'Prospectos!A:K',
+    range: 'Prospectos!A:N',
     majorDimension: 'ROWS',
     values: [
       [
         prospecto.id,
+        prospecto.pais || '',
+        prospecto.tipoIdentificacion || '',
+        prospecto.numeroIdentificacion || '',
         prospecto.empresa,
         prospecto.contacto,
         prospecto.telefono,
@@ -251,7 +359,7 @@ export async function updateProspecto(accessToken: string, spreadsheetId: string
       throw new Error(`Prospecto con ID ${prospecto.id} no encontrado en la hoja.`);
     }
 
-    const range = `Prospectos!A${rowNum}:K${rowNum}`;
+    const range = `Prospectos!A${rowNum}:N${rowNum}`;
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
     const body = {
       range,
@@ -259,6 +367,9 @@ export async function updateProspecto(accessToken: string, spreadsheetId: string
       values: [
         [
           prospecto.id,
+          prospecto.pais || '',
+          prospecto.tipoIdentificacion || '',
+          prospecto.numeroIdentificacion || '',
           prospecto.empresa,
           prospecto.contacto,
           prospecto.telefono,
