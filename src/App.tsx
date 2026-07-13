@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import logoShield from './assets/centinela_logo_1783531546255.jpg.png';
+import LandingPage from './components/LandingPage';
 
 import { 
   initAuth, 
@@ -1316,102 +1317,14 @@ export default function App() {
   const siguienteRenovacionId = generateNextRenovacionId(renovaciones);
   const siguienteTareaId = generateNextTareaId(tareas);
 
-  // Authentication UI (Login Screen)
+  // Authentication UI (Landing & Login Screen)
   if (needsAuth) {
     return (
-      <div 
-        id="login-screen"
-        className="min-h-screen bg-gradient-to-tr from-[#EBF2FF] via-[#F3F6FF] to-[#E5F5FF] flex flex-col justify-center items-center p-4 relative overflow-hidden"
-      >
-        {/* Ambient background flowing blobs */}
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#2E5BFF]/10 blur-[130px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#FF5CE3]/5 blur-[120px]" />
-        <div className="absolute bottom-[20%] left-[20%] w-[40%] h-[40%] rounded-full bg-[#60A5FA]/10 blur-[140px]" />
-
-        {/* Glass Card Container */}
-        <div className="w-full max-w-md bg-white/45 backdrop-blur-xl p-8 rounded-[32px] shadow-[0_16px_48px_rgba(46,91,255,0.06)] border border-white/80 flex flex-col items-center relative z-10">
-          {/* Centinela Glowing Glass Logo Emblem */}
-          <div className="relative w-44 h-44 flex items-center justify-center mb-2 bg-transparent">
-            <img 
-              src={logoShield} 
-              alt="Centinela Logo" 
-              className="w-full h-full object-contain" 
-              referrerPolicy="no-referrer"
-            />
-          </div>
-
-          <h1 className="text-3xl font-extrabold font-display text-slate-800 tracking-tight">
-            Centinela
-          </h1>
-          <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1.5 mb-8">
-            MANAGEMENT SYSTEM
-          </p>
-
-          <p className="text-sm text-slate-500 text-center leading-relaxed mb-8 max-w-xs font-medium">
-            Inicia sesión con tu cuenta de Google para sincronizar y gestionar tu negocio directamente en tu hoja de cálculo.
-          </p>
-
-          <button
-            id="login-button"
-            onClick={handleLogin}
-            disabled={isLoggingIn}
-            className="w-full h-12 flex items-center justify-center bg-white hover:bg-slate-50 text-slate-700 font-bold px-4 border border-slate-200/60 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_20px_rgba(46,91,255,0.08)] transition-all active:scale-[0.98] disabled:opacity-50 text-sm cursor-pointer"
-          >
-            {isLoggingIn ? (
-              <div className="flex items-center space-x-2">
-                <svg className="animate-spin h-5 w-5 text-[#2E5BFF]" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span className="text-sm text-slate-500 font-semibold">Conectando...</span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path fill="#EA4335" d="M12 5.04c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.96 1.19 15.17 0 12 0 7.31 0 3.25 2.69 1.28 6.61l4.03 3.13C6.27 6.86 8.92 5.04 12 5.04z" />
-                  <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.35H12v4.51h6.46c-.29 1.48-1.14 2.73-2.4 3.58l3.72 2.88c2.18-2.01 3.71-4.97 3.71-8.62z" />
-                  <path fill="#FBBC05" d="M5.31 14.28c-.24-.72-.38-1.49-.38-2.28s.14-1.56.38-2.28L1.28 6.61C.47 8.24 0 10.07 0 12s.47 3.76 1.28 5.39l4.03-3.11z" />
-                  <path fill="#34A853" d="M12 24c3.24 0 5.97-1.07 7.96-2.92l-3.72-2.88c-1.03.69-2.35 1.1-4.24 1.1-3.08 0-5.73-1.82-6.69-4.7L1.28 17.71C3.25 21.31 7.31 24 12 24z" />
-                </svg>
-                <span>Iniciar sesión con Google</span>
-              </div>
-            )}
-          </button>
-        </div>
-
-        {/* Socio Tecnológico Credit / Branding */}
-        <div className="mt-8 text-center z-10 animate-in fade-in slide-in-from-bottom-4 delay-200 duration-500">
-          <a 
-            href="https://www.empresarioenlinea.com/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-white/70 hover:bg-white backdrop-blur-md rounded-2xl border border-orange-100 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md group text-xs font-semibold text-slate-600"
-          >
-            <span className="flex items-center space-x-1">
-              <span className="text-[10px] text-slate-400 font-medium">Socio Tecnológico:</span>
-              <span className="text-orange-600 font-bold">EmpresarioPuntoCom</span>
-            </span>
-            <div className="w-6 h-4 flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 100 68" className="w-5 h-3.5 fill-none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M38 10 C25 10 16 19 16 32 C16 45 25 54 38 54 H54 V44 H38 C34 44 30 41 30 37 V35 H48 V27 H30 V25 C30 21 34 18 38 18 H54 V10 H38 Z" fill="#FF6600"/>
-                <path d="M54 13 H80" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
-                <circle cx="83" cy="13" r="3" fill="#FF6600"/>
-                <path d="M54 21 H62 L68 15 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
-                <circle cx="81" cy="15" r="3" fill="#FF6600"/>
-                <path d="M48 31 H58 L64 25 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
-                <circle cx="81" cy="25" r="3" fill="#FF6600"/>
-                <path d="M54 39 H60 L66 33 H74" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
-                <circle cx="77" cy="33" r="3" fill="#FF6600"/>
-                <path d="M54 47 H62 L68 41 H78" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
-                <circle cx="81" cy="41" r="3" fill="#FF6600"/>
-                <path d="M54 51 H74" stroke="#FF6600" strokeWidth="2.5" strokeLinecap="round"/>
-                <circle cx="77" cy="51" r="3" fill="#FF6600"/>
-              </svg>
-            </div>
-            <ExternalLink size={10} className="text-slate-400 group-hover:text-orange-500 transition-colors" />
-          </a>
-        </div>
-      </div>
+      <LandingPage 
+        handleLogin={handleLogin} 
+        isLoggingIn={isLoggingIn} 
+        logoShield={logoShield} 
+      />
     );
   }
 
