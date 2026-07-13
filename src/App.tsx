@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
-import logoShield from './assets/images/centinela_logo_1783531546255.jpg';
+import logoShield from './assets/centinela_logo_1783531546255.jpg.png';
+
 import { 
   initAuth, 
   googleSignIn, 
@@ -1330,14 +1331,13 @@ export default function App() {
         {/* Glass Card Container */}
         <div className="w-full max-w-md bg-white/45 backdrop-blur-xl p-8 rounded-[32px] shadow-[0_16px_48px_rgba(46,91,255,0.06)] border border-white/80 flex flex-col items-center relative z-10">
           {/* Centinela Glowing Glass Logo Emblem */}
-          <div className="relative w-20 h-20 rounded-[24px] overflow-hidden shadow-[0_8px_32px_rgba(46,91,255,0.3)] flex items-center justify-center mb-6 border border-white/20 bg-slate-950">
+          <div className="relative w-44 h-44 flex items-center justify-center mb-2 bg-transparent">
             <img 
               src={logoShield} 
               alt="Centinela Logo" 
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-contain" 
               referrerPolicy="no-referrer"
             />
-            <span className="absolute inset-0 rounded-[24px] border border-white/30 animate-pulse pointer-events-none" />
           </div>
 
           <h1 className="text-3xl font-extrabold font-display text-slate-800 tracking-tight">
@@ -1458,14 +1458,13 @@ export default function App() {
           {/* Brand Title with Glowing Emblem */}
           <div className="p-6 border-b border-slate-100/60 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="relative flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden shadow-[0_4px_16px_rgba(46,91,255,0.3)] bg-slate-950">
+              <div className="relative flex items-center justify-center w-12 h-12 shrink-0 bg-transparent">
                 <img 
                   src={logoShield} 
                   alt="Centinela Logo" 
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-contain" 
                   referrerPolicy="no-referrer"
                 />
-                <span className="absolute inset-0 rounded-xl border border-white/20 animate-pulse pointer-events-none" />
               </div>
               <div>
                 <span className="font-bold text-lg font-display text-slate-800 tracking-tight block leading-none">Centinela</span>
