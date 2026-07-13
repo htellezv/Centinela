@@ -170,6 +170,10 @@ export default function App() {
   // Company Configuration State
   const [companyName, setCompanyName] = useState<string>(() => localStorage.getItem('companyName') || '');
   const [companyLogo, setCompanyLogo] = useState<string>(() => localStorage.getItem('companyLogo') || '');
+  const [companyLogoBg, setCompanyLogoBg] = useState<'white' | 'dark' | 'grid'>(() => {
+    const saved = localStorage.getItem('companyLogoBg');
+    return (saved === 'white' || saved === 'dark' || saved === 'grid') ? saved : 'white';
+  });
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
 
   // Filter & Search states - Clientes
@@ -1364,10 +1368,10 @@ export default function App() {
             ) : (
               <div className="flex items-center space-x-3">
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                  <path fill="#EA4335" d="M12 5.04c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.96 1.19 15.17 0 12 0 7.31 0 3.25 2.69 1.28 6.61l4.03 3.13C6.27 6.86 8.92 5.04 12 5.04z" />
+                  <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.35H12v4.51h6.46c-.29 1.48-1.14 2.73-2.4 3.58l3.72 2.88c2.18-2.01 3.71-4.97 3.71-8.62z" />
+                  <path fill="#FBBC05" d="M5.31 14.28c-.24-.72-.38-1.49-.38-2.28s.14-1.56.38-2.28L1.28 6.61C.47 8.24 0 10.07 0 12s.47 3.76 1.28 5.39l4.03-3.11z" />
+                  <path fill="#34A853" d="M12 24c3.24 0 5.97-1.07 7.96-2.92l-3.72-2.88c-1.03.69-2.35 1.1-4.24 1.1-3.08 0-5.73-1.82-6.69-4.7L1.28 17.71C3.25 21.31 7.31 24 12 24z" />
                 </svg>
                 <span>Iniciar sesión con Google</span>
               </div>
@@ -1608,9 +1612,9 @@ export default function App() {
         </nav>
 
         {/* Tarjeta Promocional: EmpresarioPuntoCom */}
-        <div className="mx-4 my-2 relative group">
-          {/* Subtle Compact Trigger Badge (Visible by default) */}
-          <div className="flex items-center justify-center space-x-1.5 py-1.5 px-3 bg-slate-50 hover:bg-orange-50/50 rounded-xl border border-slate-100/80 hover:border-orange-100 transition-all cursor-pointer text-[10px] font-bold text-slate-400 hover:text-orange-600">
+        <div className="hidden lg:block mx-4 my-2 relative group transition-all duration-300">
+          {/* Subtle Compact Trigger Badge (Visible only on hover of the group or extremely faint by default) */}
+          <div className="flex items-center justify-center space-x-1.5 py-1.5 px-3 bg-slate-50/30 hover:bg-orange-50/50 rounded-xl border border-transparent hover:border-orange-100 transition-all cursor-pointer text-[10px] font-bold text-slate-400 hover:text-orange-600 opacity-20 group-hover:opacity-100 duration-300">
             <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shrink-0" />
             <span>AI Partner: EmpresarioPuntoCom</span>
           </div>
@@ -1654,7 +1658,7 @@ export default function App() {
 
             <div className="space-y-2.5 relative z-10">
               <p className="text-[10.5px] text-slate-600 leading-normal font-semibold">
-                ¿Deseas escalar esta app o crear un desarrollo a medida con Inteligencia Artificial?
+                ¿Deseas escalar esta app o crear un development a medida con Inteligencia Artificial?
               </p>
               <a
                 href="https://www.empresarioenlinea.com/"
@@ -1692,7 +1696,13 @@ export default function App() {
                     <img 
                       src={companyLogo} 
                       alt="Logo Empresa" 
-                      className="w-8 h-8 rounded-lg object-contain bg-white border border-slate-200/60 shrink-0" 
+                      className={`w-8 h-8 rounded-lg object-contain shrink-0 border ${
+                        companyLogoBg === 'dark' 
+                          ? 'bg-slate-900 border-slate-850' 
+                          : companyLogoBg === 'grid' 
+                          ? 'bg-white bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] bg-[size:8px_8px] bg-[position:0_0,0_4px,4px_-4px,-4px_0] border-slate-200/60' 
+                          : 'bg-white border-slate-200/60'
+                      }`}
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-lg bg-[#2E5BFF]/10 text-[#2E5BFF] flex items-center justify-center font-bold text-xs shrink-0">
@@ -3833,7 +3843,15 @@ export default function App() {
                 
                 <div className="flex items-center space-x-4">
                   {/* Preview */}
-                  <div className="w-16 h-16 rounded-xl border border-slate-200/80 bg-slate-50/40 flex items-center justify-center overflow-hidden shrink-0">
+                  <div className={`w-16 h-16 rounded-xl border flex items-center justify-center overflow-hidden shrink-0 transition-all ${
+                    companyLogo
+                      ? companyLogoBg === 'dark'
+                        ? 'bg-slate-900 border-slate-800'
+                        : companyLogoBg === 'grid'
+                        ? 'bg-white bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] bg-[size:6px_6px] bg-[position:0_0,0_3px,3px_-3px,-3px_0] border-slate-200/60'
+                        : 'bg-white border-slate-200/60'
+                      : 'bg-slate-50/40 border-slate-200/80'
+                  }`}>
                     {companyLogo ? (
                       <img 
                         src={companyLogo} 
@@ -3882,6 +3900,63 @@ export default function App() {
                     </p>
                   </div>
                 </div>
+
+                {/* Background selector for company logo (extremely helpful for transparent images) */}
+                {companyLogo && (
+                  <div className="mt-4 p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-2">
+                    <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Fondo del Logotipo
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCompanyLogoBg('white');
+                          localStorage.setItem('companyLogoBg', 'white');
+                        }}
+                        className={`px-3 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
+                          companyLogoBg === 'white'
+                            ? 'bg-[#2E5BFF]/10 text-[#2E5BFF] border-[#2E5BFF]/30 shadow-xs'
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        Blanco
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCompanyLogoBg('dark');
+                          localStorage.setItem('companyLogoBg', 'dark');
+                        }}
+                        className={`px-3 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
+                          companyLogoBg === 'dark'
+                            ? 'bg-slate-900 text-white border-slate-800 shadow-xs'
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        Oscuro
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCompanyLogoBg('grid');
+                          localStorage.setItem('companyLogoBg', 'grid');
+                        }}
+                        className={`px-3 py-1.5 text-[10px] font-bold rounded-lg border transition-all flex items-center space-x-1.5 ${
+                          companyLogoBg === 'grid'
+                            ? 'bg-slate-100 text-slate-850 border-slate-300 shadow-xs'
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="w-2.5 h-2.5 rounded bg-white bg-[linear-gradient(45deg,#cbd5e1_25%,transparent_25%),linear-gradient(-45deg,#cbd5e1_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#cbd5e1_75%),linear-gradient(-45deg,transparent_75%,#cbd5e1_75%)] bg-[size:3px_3px] bg-[position:0_0,0_1.5px,1.5px_-1.5px,-1.5px_0] border border-slate-200 shrink-0" />
+                        <span>Cuadrícula</span>
+                      </button>
+                    </div>
+                    <p className="text-[9.5px] text-slate-400 leading-normal">
+                      Elige el fondo que mejor contraste con el logotipo (ideal para imágenes PNG transparentes con logos de color blanco).
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
