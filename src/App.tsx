@@ -104,7 +104,9 @@ import {
   Menu,
   UserCheck,
   Mail,
-  Video
+  Video,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import ClienteForm from './components/ClienteForm';
 import ProspectoForm from './components/ProspectoForm';
@@ -206,6 +208,31 @@ export default function App() {
   const [tareasSearchQuery, setTareasSearchQuery] = useState('');
   const [tareasPrioridadFilter, setTareasPrioridadFilter] = useState('Todos');
   const [tareasEstadoFilter, setTareasEstadoFilter] = useState('Todos');
+
+  // Pagination states - Clientes
+  const [clientesPage, setClientesPage] = useState(1);
+  const [clientesPerPage, setClientesPerPage] = useState(10);
+
+  // Pagination states - Prospectos
+  const [prospectosPage, setProspectosPage] = useState(1);
+  const [prospectosPerPage, setProspectosPerPage] = useState(10);
+
+  // Pagination states - Tareas
+  const [tareasPage, setTareasPage] = useState(1);
+  const [tareasPerPage, setTareasPerPage] = useState(10);
+
+  // Reset pages when filters change
+  useEffect(() => {
+    setClientesPage(1);
+  }, [searchQuery, estadoFilter]);
+
+  useEffect(() => {
+    setProspectosPage(1);
+  }, [prospectosSearchQuery, prospectosEstadoFilter]);
+
+  useEffect(() => {
+    setTareasPage(1);
+  }, [tareasSearchQuery, tareasPrioridadFilter, tareasEstadoFilter]);
 
   // Form states - Clientes
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -1257,6 +1284,30 @@ export default function App() {
     return matchesSearch && matchesEstado;
   });
 
+  // Clientes pagination calculations
+  const totalClientesPages = Math.ceil(filteredClientes.length / clientesPerPage) || 1;
+  const currentClientesPage = Math.min(clientesPage, totalClientesPages);
+  const paginatedClientes = filteredClientes.slice(
+    (currentClientesPage - 1) * clientesPerPage,
+    currentClientesPage * clientesPerPage
+  );
+
+  // Prospectos pagination calculations
+  const totalProspectosPages = Math.ceil(filteredProspectos.length / prospectosPerPage) || 1;
+  const currentProspectosPage = Math.min(prospectosPage, totalProspectosPages);
+  const paginatedProspectos = filteredProspectos.slice(
+    (currentProspectosPage - 1) * prospectosPerPage,
+    currentProspectosPage * prospectosPerPage
+  );
+
+  // Tareas pagination calculations
+  const totalTareasPages = Math.ceil(filteredTareas.length / tareasPerPage) || 1;
+  const currentTareasPage = Math.min(tareasPage, totalTareasPages);
+  const paginatedTareas = filteredTareas.slice(
+    (currentTareasPage - 1) * tareasPerPage,
+    currentTareasPage * tareasPerPage
+  );
+
   // Filter & Search computation - Ventas
   const filteredVentas = ventas.filter((v) => {
     const matchesSearch = 
@@ -2297,7 +2348,7 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-                        {filteredClientes.map((cliente) => (
+                        {paginatedClientes.map((cliente) => (
                           <tr 
                             key={cliente.id}
                             className="hover:bg-slate-50/50 transition-colors group"
@@ -2422,13 +2473,54 @@ export default function App() {
                   </div>
                 )}
                 {!isLoading && (
-                  <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center text-xs text-slate-400">
-                    <span>
-                      Mostrando {filteredClientes.length} de {clientes.length} clientes
-                    </span>
-                    <span className="font-mono text-[10px]">
-                      Sincronizado con Sheets en tiempo real
-                    </span>
+                  <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-4 justify-between items-center text-xs text-slate-500">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span>
+                        Mostrando <strong>{filteredClientes.length === 0 ? 0 : (currentClientesPage - 1) * clientesPerPage + 1}-{Math.min(currentClientesPage * clientesPerPage, filteredClientes.length)}</strong> de <strong>{filteredClientes.length}</strong> clientes
+                        {filteredClientes.length !== clientes.length && ` (filtrado de ${clientes.length} en total)`}
+                      </span>
+                      
+                      <div className="flex items-center space-x-1.5 text-xs text-slate-400 bg-white border border-slate-100 px-2 py-1 rounded-xl shadow-sm">
+                        <span>Mostrar:</span>
+                        <select
+                          id="clientes-per-page-select"
+                          value={clientesPerPage}
+                          onChange={(e) => {
+                            setClientesPerPage(Number(e.target.value));
+                            setClientesPage(1);
+                          }}
+                          className="font-bold text-slate-600 bg-transparent focus:outline-none cursor-pointer"
+                        >
+                          <option value={10}>10</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setClientesPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentClientesPage === 1}
+                        className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        title="Página anterior"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      
+                      <span className="font-medium text-slate-600">
+                        Página <strong>{currentClientesPage}</strong> de {totalClientesPages}
+                      </span>
+
+                      <button
+                        onClick={() => setClientesPage(prev => Math.min(prev + 1, totalClientesPages))}
+                        disabled={currentClientesPage === totalClientesPages}
+                        className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        title="Siguiente página"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2566,7 +2658,7 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-                        {filteredProspectos.map((p) => (
+                        {paginatedProspectos.map((p) => (
                           <tr 
                             key={p.id}
                             className="hover:bg-slate-50/50 transition-colors group"
@@ -2701,13 +2793,54 @@ export default function App() {
                   </div>
                 )}
                 {!isLoading && (
-                  <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center text-xs text-slate-400">
-                    <span>
-                      Mostrando {filteredProspectos.length} de {prospectos.length} prospectos
-                    </span>
-                    <span className="font-mono text-[10px]">
-                      Sincronizado con Sheets en tiempo real
-                    </span>
+                  <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-4 justify-between items-center text-xs text-slate-500">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span>
+                        Mostrando <strong>{filteredProspectos.length === 0 ? 0 : (currentProspectosPage - 1) * prospectosPerPage + 1}-{Math.min(currentProspectosPage * prospectosPerPage, filteredProspectos.length)}</strong> de <strong>{filteredProspectos.length}</strong> prospectos
+                        {filteredProspectos.length !== prospectos.length && ` (filtrado de ${prospectos.length} en total)`}
+                      </span>
+                      
+                      <div className="flex items-center space-x-1.5 text-xs text-slate-400 bg-white border border-slate-100 px-2 py-1 rounded-xl shadow-sm">
+                        <span>Mostrar:</span>
+                        <select
+                          id="prospectos-per-page-select"
+                          value={prospectosPerPage}
+                          onChange={(e) => {
+                            setProspectosPerPage(Number(e.target.value));
+                            setProspectosPage(1);
+                          }}
+                          className="font-bold text-slate-600 bg-transparent focus:outline-none cursor-pointer"
+                        >
+                          <option value={10}>10</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setProspectosPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentProspectosPage === 1}
+                        className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        title="Página anterior"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      
+                      <span className="font-medium text-slate-600">
+                        Página <strong>{currentProspectosPage}</strong> de {totalProspectosPages}
+                      </span>
+
+                      <button
+                        onClick={() => setProspectosPage(prev => Math.min(prev + 1, totalProspectosPages))}
+                        disabled={currentProspectosPage === totalProspectosPages}
+                        className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        title="Siguiente página"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -3368,7 +3501,7 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-                        {filteredTareas.map((t) => (
+                        {paginatedTareas.map((t) => (
                           <tr 
                             key={t.id}
                             className={`hover:bg-slate-50/50 transition-colors group ${t.estado === 'Completada' ? 'bg-slate-50/20 text-slate-400' : ''}`}
@@ -3457,13 +3590,54 @@ export default function App() {
                   </div>
                 )}
                 {!isLoading && (
-                  <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center text-xs text-slate-400">
-                    <span>
-                      Mostrando {filteredTareas.length} de {tareas.length} tareas
-                    </span>
-                    <span className="font-mono text-[10px]">
-                      Sincronizado con Sheets en tiempo real
-                    </span>
+                  <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-4 justify-between items-center text-xs text-slate-500">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span>
+                        Mostrando <strong>{filteredTareas.length === 0 ? 0 : (currentTareasPage - 1) * tareasPerPage + 1}-{Math.min(currentTareasPage * tareasPerPage, filteredTareas.length)}</strong> de <strong>{filteredTareas.length}</strong> tareas
+                        {filteredTareas.length !== tareas.length && ` (filtrado de ${tareas.length} en total)`}
+                      </span>
+                      
+                      <div className="flex items-center space-x-1.5 text-xs text-slate-400 bg-white border border-slate-100 px-2 py-1 rounded-xl shadow-sm">
+                        <span>Mostrar:</span>
+                        <select
+                          id="tareas-per-page-select"
+                          value={tareasPerPage}
+                          onChange={(e) => {
+                            setTareasPerPage(Number(e.target.value));
+                            setTareasPage(1);
+                          }}
+                          className="font-bold text-slate-600 bg-transparent focus:outline-none cursor-pointer"
+                        >
+                          <option value={10}>10</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setTareasPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentTareasPage === 1}
+                        className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        title="Página anterior"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      
+                      <span className="font-medium text-slate-600">
+                        Página <strong>{currentTareasPage}</strong> de {totalTareasPages}
+                      </span>
+
+                      <button
+                        onClick={() => setTareasPage(prev => Math.min(prev + 1, totalTareasPages))}
+                        disabled={currentTareasPage === totalTareasPages}
+                        className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        title="Siguiente página"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
