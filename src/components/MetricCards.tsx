@@ -46,7 +46,7 @@ export default function MetricCards({ clientes }: MetricCardsProps) {
       {/* Metric 1: Total */}
       <div 
         id="metric-total-clientes"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(46,91,255,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-blue-300/60 hover:shadow-[0_12px_40px_rgba(46,91,255,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(46,91,255,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-400/50 hover:shadow-[0_20px_45px_rgba(46,91,255,0.12)]"
       >
         <div className="space-y-1">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Total Clientes</span>
@@ -61,7 +61,7 @@ export default function MetricCards({ clientes }: MetricCardsProps) {
       {/* Metric 2: Activos */}
       <div 
         id="metric-clientes-activos"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(46,91,255,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-blue-300/60 hover:shadow-[0_12px_40px_rgba(46,91,255,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(46,91,255,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-400/50 hover:shadow-[0_20px_45px_rgba(46,91,255,0.12)]"
       >
         <div className="space-y-1">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Contratos Activos</span>
@@ -78,7 +78,7 @@ export default function MetricCards({ clientes }: MetricCardsProps) {
       {/* Metric 3: Facturación Mensual */}
       <div 
         id="metric-facturacion"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(255,92,227,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-pink-300/60 hover:shadow-[0_12px_40px_rgba(255,92,227,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(255,92,227,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-pink-400/50 hover:shadow-[0_20px_45px_rgba(255,92,227,0.12)]"
       >
         <div className="space-y-1">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Facturación Mensual</span>
@@ -95,7 +95,7 @@ export default function MetricCards({ clientes }: MetricCardsProps) {
       {/* Metric 4: Vencidos / Alertas */}
       <div 
         id="metric-vencidos"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(239,68,68,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-red-300/60 hover:shadow-[0_12px_40px_rgba(239,68,68,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(239,68,68,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-rose-400/50 hover:shadow-[0_20px_45px_rgba(239,68,68,0.12)]"
       >
         <div className="space-y-1">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Contratos Vencidos</span>

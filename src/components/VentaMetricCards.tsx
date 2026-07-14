@@ -47,7 +47,7 @@ export default function VentaMetricCards({ ventas }: VentaMetricCardsProps) {
       {/* Metric 1: Total Ventas */}
       <div 
         id="metric-total-ventas"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(46,91,255,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-blue-300/60 hover:shadow-[0_12px_40px_rgba(46,91,255,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(46,91,255,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-400/50 hover:shadow-[0_20px_45px_rgba(46,91,255,0.12)]"
       >
         <div className="space-y-1">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Total Transacciones</span>
@@ -62,7 +62,7 @@ export default function VentaMetricCards({ ventas }: VentaMetricCardsProps) {
       {/* Metric 2: Total Facturado */}
       <div 
         id="metric-total-facturado"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(71,85,105,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-slate-300/60 hover:shadow-[0_12px_40px_rgba(71,85,105,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(71,85,105,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-slate-400/50 hover:shadow-[0_20px_45px_rgba(71,85,105,0.12)]"
       >
         <div className="space-y-1">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Total Facturado</span>
@@ -79,7 +79,7 @@ export default function VentaMetricCards({ ventas }: VentaMetricCardsProps) {
       {/* Metric 3: Total Recaudado */}
       <div 
         id="metric-total-recaudado"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(46,91,255,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-blue-300/60 hover:shadow-[0_12px_40px_rgba(46,91,255,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(46,91,255,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-400/50 hover:shadow-[0_20px_45px_rgba(46,91,255,0.12)]"
       >
         <div className="space-y-1">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Monto Recaudado</span>
@@ -96,7 +96,7 @@ export default function VentaMetricCards({ ventas }: VentaMetricCardsProps) {
       {/* Metric 4: Pendiente de Cobro */}
       <div 
         id="metric-total-pendiente"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(14,165,233,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-sky-300/60 hover:shadow-[0_12px_40px_rgba(14,165,233,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(14,165,233,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-sky-400/50 hover:shadow-[0_20px_45px_rgba(14,165,233,0.12)]"
       >
         <div className="space-y-1">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Pendiente de Cobro</span>

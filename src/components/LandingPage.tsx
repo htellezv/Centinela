@@ -55,19 +55,19 @@ export default function LandingPage({ handleLogin, isLoggingIn, logoShield }: La
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="h-screen h-[100dvh] w-full bg-gradient-to-tr from-[#EBF2FF] via-[#F3F6FF] to-[#E5F5FF] text-slate-800 selection:bg-zinc-900 selection:text-white overflow-hidden relative flex flex-col md:flex-row items-center justify-center p-6 sm:p-12 md:p-16" 
+      className="h-screen h-[100dvh] w-full bg-gradient-to-tr from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-slate-800 selection:bg-zinc-900 selection:text-white overflow-hidden relative flex flex-col md:flex-row items-center justify-center p-6 sm:p-12 md:p-16" 
       style={{ fontFamily: '"Plus Jakarta Sans", sans-serif' }}
     >
       
       {/* Soft Elegant Fluid Background Blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#2E5BFF]/10 blur-[130px] pointer-events-none animate-pulse duration-[8000ms]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#FF5CE3]/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[20%] w-[40%] h-[40%] rounded-full bg-[#60A5FA]/10 blur-[140px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-white/10 blur-[130px] pointer-events-none animate-pulse duration-[8000ms]" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-white/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[20%] left-[20%] w-[40%] h-[40%] rounded-full bg-white/10 blur-[140px] pointer-events-none" />
 
-      {/* Dark Dot Grid Overlay on light background */}
+      {/* White Dot Grid Overlay on colorful background */}
       <div 
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{ backgroundImage: 'radial-gradient(#000000 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }}
+        className="absolute inset-0 opacity-[0.12] pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(#ffffff 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }}
       />
 
       {/* Two-Column Responsive Layout */}
@@ -109,12 +109,15 @@ export default function LandingPage({ handleLogin, isLoggingIn, logoShield }: La
               rotateY: useSpring(useMotionValue(0), { stiffness: 100, damping: 20 }),
               transformStyle: "preserve-3d"
             }}
-            className="w-full max-w-md bg-white/45 backdrop-blur-xl p-8 sm:p-10 rounded-[32px] border border-white/80 flex flex-col items-center shadow-[0_16px_48px_rgba(46,91,255,0.06)] hover:shadow-[0_24px_64px_rgba(46,91,255,0.1)] transition-shadow duration-500"
+            className="w-full max-w-md bg-white/75 backdrop-blur-xl p-8 sm:p-10 rounded-[32px] border border-white/80 flex flex-col items-center shadow-[0_16px_48px_rgba(46,91,255,0.06)] hover:shadow-[0_24px_64px_rgba(46,91,255,0.1)] transition-shadow duration-500"
           >
             {/* Centinela Mini Badge */}
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-[#2E5BFF]/10 rounded-full mb-6">
-              <span className="w-1.5 h-1.5 bg-[#2E5BFF] rounded-full animate-ping" />
-              <span className="text-[10px] font-bold tracking-wider text-[#2E5BFF] uppercase">SISTEMA SEGURO</span>
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] rounded-full mb-6 shadow-sm border border-white/10">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white animate-pulse"></span>
+              </span>
+              <span className="text-[10px] font-bold tracking-wider text-white uppercase">SISTEMA SEGURO</span>
             </div>
 
             {/* Description Text */}

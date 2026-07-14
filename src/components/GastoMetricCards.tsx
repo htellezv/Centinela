@@ -60,7 +60,7 @@ export default function GastoMetricCards({ gastos }: GastoMetricCardsProps) {
       {/* Metric 1: Total Gastos Count */}
       <div 
         id="metric-total-gastos-count"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(46,91,255,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-blue-300/60 hover:shadow-[0_12px_40px_rgba(46,91,255,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(46,91,255,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-400/50 hover:shadow-[0_20px_45px_rgba(46,91,255,0.12)]"
       >
         <div className="space-y-1 min-w-0">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block truncate">Total Transacciones</span>
@@ -75,7 +75,7 @@ export default function GastoMetricCards({ gastos }: GastoMetricCardsProps) {
       {/* Metric 2: Total Spent */}
       <div 
         id="metric-total-gasto-valor"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(239,68,68,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-red-300/60 hover:shadow-[0_12px_40px_rgba(239,68,68,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(239,68,68,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-rose-400/50 hover:shadow-[0_20px_45px_rgba(239,68,68,0.12)]"
       >
         <div className="space-y-1 min-w-0">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block truncate">Total Egresos</span>
@@ -92,7 +92,7 @@ export default function GastoMetricCards({ gastos }: GastoMetricCardsProps) {
       {/* Metric 3: Gasto Promedio */}
       <div 
         id="metric-gasto-promedio"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(71,85,105,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-slate-300/60 hover:shadow-[0_12px_40px_rgba(71,85,105,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(71,85,105,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-slate-400/50 hover:shadow-[0_20px_45px_rgba(71,85,105,0.12)]"
       >
         <div className="space-y-1 min-w-0">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block truncate">Gasto Promedio</span>
@@ -109,7 +109,7 @@ export default function GastoMetricCards({ gastos }: GastoMetricCardsProps) {
       {/* Metric 4: Categoría Principal */}
       <div 
         id="metric-categoria-principal"
-        className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(14,165,233,0.03)] flex items-center justify-between transition-all duration-300 hover:bg-white/65 hover:border-sky-300/60 hover:shadow-[0_12px_40px_rgba(14,165,233,0.06)]"
+        className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(14,165,233,0.05)] flex items-center justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:border-sky-400/50 hover:shadow-[0_20px_45px_rgba(14,165,233,0.12)]"
       >
         <div className="space-y-1 min-w-0">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block truncate">Categoría Mayor</span>

@@ -1330,13 +1330,13 @@ export default function App() {
 
   // Application Layout UI
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-[#EBF2FF] via-[#F3F6FF] to-[#E5F5FF] flex text-slate-800 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-[#EAEFF6] flex text-slate-800 font-sans relative overflow-hidden">
       
       {/* Ambient background flowing blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#2E5BFF]/10 blur-[130px]" />
-        <div className="absolute bottom-[20%] right-[-10%] w-[45%] h-[45%] rounded-full bg-[#FF5CE3]/5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[55%] h-[55%] rounded-full bg-[#60A5FA]/10 blur-[140px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#2E5BFF]/8 blur-[130px]" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[45%] h-[45%] rounded-full bg-[#FF5CE3]/4 blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[55%] h-[55%] rounded-full bg-[#60A5FA]/8 blur-[140px]" />
       </div>
 
       {/* Main container wrappers for glass sidebar and main view */}
@@ -1364,24 +1364,24 @@ export default function App() {
         {/* Sidebar Layout */}
         <aside 
           id="app-sidebar"
-          className={`fixed inset-y-0 left-0 w-64 bg-white/90 lg:bg-white/50 backdrop-blur-xl border-r border-slate-100 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(46,91,255,0.02)] z-40 transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white flex flex-col shrink-0 shadow-[8px_0_36px_rgba(46,91,255,0.08)] z-40 transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           {/* Brand Title with Glowing Emblem */}
-          <div className="p-6 border-b border-slate-100/60 flex items-center justify-between">
+          <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="relative flex items-center justify-center w-12 h-12 shrink-0 bg-transparent">
                 <img 
                   src={logoShield} 
                   alt="Centinela Logo" 
-                  className="w-full h-full object-contain" 
+                  className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(255,255,255,0.25)]" 
                   referrerPolicy="no-referrer"
                 />
               </div>
               <div>
-                <span className="font-bold text-lg font-display text-slate-800 tracking-tight block leading-none">Centinela</span>
-                <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">
+                <span className="font-extrabold text-lg font-display text-white tracking-tight block leading-none">Centinela</span>
+                <span className="block text-[8px] text-white/70 font-extrabold uppercase tracking-widest mt-1">
                   MANAGEMENT SYSTEM
                 </span>
               </div>
@@ -1390,7 +1390,7 @@ export default function App() {
             {/* Mobile Sidebar Close Button */}
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="lg:hidden p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+              className="lg:hidden p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all"
               title="Cerrar menú"
             >
               <X size={18} />
@@ -1399,7 +1399,7 @@ export default function App() {
 
           {/* Sidebar Navigation */}
           <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
-            <span className="block px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+            <span className="block px-3 text-[10px] font-extrabold uppercase tracking-widest text-white/60 mb-2">
               Módulos
             </span>
 
@@ -1409,15 +1409,15 @@ export default function App() {
               onClick={() => setActiveModule('dashboard')}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
                 activeModule === 'dashboard'
-                  ? 'bg-[#2E5BFF]/10 text-[#2E5BFF] border border-[#2E5BFF]/10 shadow-[0_4px_15px_rgba(46,91,255,0.06)]'
-                  : 'text-slate-500 hover:text-[#2E5BFF] hover:bg-[#2E5BFF]/5'
+                  ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
               <div className="flex items-center space-x-3">
-                <LayoutDashboard size={18} className={activeModule === 'dashboard' ? 'text-[#2E5BFF]' : 'text-slate-400'} />
+                <LayoutDashboard size={18} className={activeModule === 'dashboard' ? 'text-white' : 'text-white/60'} />
                 <span>Dashboard</span>
               </div>
-              {activeModule === 'dashboard' && <span className="w-1.5 h-1.5 bg-[#2E5BFF] rounded-full shadow-[0_0_8px_#2E5BFF]" />}
+              {activeModule === 'dashboard' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
             </button>
 
             {/* Clientes (ENABLED) */}
@@ -1426,15 +1426,15 @@ export default function App() {
               onClick={() => setActiveModule('clientes')}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
                 activeModule === 'clientes'
-                  ? 'bg-[#2E5BFF]/10 text-[#2E5BFF] border border-[#2E5BFF]/10 shadow-[0_4px_15px_rgba(46,91,255,0.06)]'
-                  : 'text-slate-500 hover:text-[#2E5BFF] hover:bg-[#2E5BFF]/5'
+                  ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
               <div className="flex items-center space-x-3">
-                <Users size={18} className={activeModule === 'clientes' ? 'text-[#2E5BFF]' : 'text-slate-400'} />
+                <Users size={18} className={activeModule === 'clientes' ? 'text-white' : 'text-white/60'} />
                 <span>Clientes</span>
               </div>
-              {activeModule === 'clientes' && <span className="w-1.5 h-1.5 bg-[#2E5BFF] rounded-full shadow-[0_0_8px_#2E5BFF]" />}
+              {activeModule === 'clientes' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
             </button>
 
             {/* Prospectos (ENABLED) */}
@@ -1443,15 +1443,15 @@ export default function App() {
               onClick={() => setActiveModule('prospectos')}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
                 activeModule === 'prospectos'
-                  ? 'bg-[#2E5BFF]/10 text-[#2E5BFF] border border-[#2E5BFF]/10 shadow-[0_4px_15px_rgba(46,91,255,0.06)]'
-                  : 'text-slate-500 hover:text-[#2E5BFF] hover:bg-[#2E5BFF]/5'
+                  ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
               <div className="flex items-center space-x-3">
-                <Layers size={18} className={activeModule === 'prospectos' ? 'text-[#2E5BFF]' : 'text-slate-400'} />
+                <Layers size={18} className={activeModule === 'prospectos' ? 'text-white' : 'text-white/60'} />
                 <span>Prospectos</span>
               </div>
-              {activeModule === 'prospectos' && <span className="w-1.5 h-1.5 bg-[#2E5BFF] rounded-full shadow-[0_0_8px_#2E5BFF]" />}
+              {activeModule === 'prospectos' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
             </button>
 
           {/* Ventas (ENABLED) */}
@@ -1460,15 +1460,15 @@ export default function App() {
             onClick={() => setActiveModule('ventas')}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
               activeModule === 'ventas'
-                ? 'bg-[#2E5BFF]/10 text-[#2E5BFF] border border-[#2E5BFF]/10 shadow-[0_4px_15px_rgba(46,91,255,0.06)]'
-                : 'text-slate-500 hover:text-[#2E5BFF] hover:bg-[#2E5BFF]/5'
+                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
           >
             <div className="flex items-center space-x-3">
-              <TrendingUp size={18} className={activeModule === 'ventas' ? 'text-[#2E5BFF]' : 'text-slate-400'} />
+              <TrendingUp size={18} className={activeModule === 'ventas' ? 'text-white' : 'text-white/60'} />
               <span>Ventas</span>
             </div>
-            {activeModule === 'ventas' && <span className="w-1.5 h-1.5 bg-[#2E5BFF] rounded-full shadow-[0_0_8px_#2E5BFF]" />}
+            {activeModule === 'ventas' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
           </button>
 
           {/* Gastos (ENABLED) */}
@@ -1477,15 +1477,15 @@ export default function App() {
             onClick={() => setActiveModule('gastos')}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
               activeModule === 'gastos'
-                ? 'bg-[#2E5BFF]/10 text-[#2E5BFF] border border-[#2E5BFF]/10 shadow-[0_4px_15px_rgba(46,91,255,0.06)]'
-                : 'text-slate-500 hover:text-[#2E5BFF] hover:bg-[#2E5BFF]/5'
+                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
           >
             <div className="flex items-center space-x-3">
-              <Receipt size={18} className={activeModule === 'gastos' ? 'text-[#2E5BFF]' : 'text-slate-400'} />
+              <Receipt size={18} className={activeModule === 'gastos' ? 'text-white' : 'text-white/60'} />
               <span>Gastos</span>
             </div>
-            {activeModule === 'gastos' && <span className="w-1.5 h-1.5 bg-[#2E5BFF] rounded-full shadow-[0_0_8px_#2E5BFF]" />}
+            {activeModule === 'gastos' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
           </button>
 
           {/* Renovaciones (ENABLED) */}
@@ -1494,15 +1494,15 @@ export default function App() {
             onClick={() => setActiveModule('renovaciones')}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
               activeModule === 'renovaciones'
-                ? 'bg-[#2E5BFF]/10 text-[#2E5BFF] border border-[#2E5BFF]/10 shadow-[0_4px_15px_rgba(46,91,255,0.06)]'
-                : 'text-slate-500 hover:text-[#2E5BFF] hover:bg-[#2E5BFF]/5'
+                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
           >
             <div className="flex items-center space-x-3">
-              <Calendar size={18} className={activeModule === 'renovaciones' ? 'text-[#2E5BFF]' : 'text-slate-400'} />
+              <Calendar size={18} className={activeModule === 'renovaciones' ? 'text-white' : 'text-white/60'} />
               <span>Renovaciones</span>
             </div>
-            {activeModule === 'renovaciones' && <span className="w-1.5 h-1.5 bg-[#2E5BFF] rounded-full shadow-[0_0_8px_#2E5BFF]" />}
+            {activeModule === 'renovaciones' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
           </button>
 
           {/* Tareas (ENABLED) */}
@@ -1511,15 +1511,15 @@ export default function App() {
             onClick={() => setActiveModule('tareas')}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
               activeModule === 'tareas'
-                ? 'bg-[#2E5BFF]/10 text-[#2E5BFF] border border-[#2E5BFF]/10 shadow-[0_4px_15px_rgba(46,91,255,0.06)]'
-                : 'text-slate-500 hover:text-[#2E5BFF] hover:bg-[#2E5BFF]/5'
+                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
           >
             <div className="flex items-center space-x-3">
-              <CheckSquare size={18} className={activeModule === 'tareas' ? 'text-[#2E5BFF]' : 'text-slate-400'} />
+              <CheckSquare size={18} className={activeModule === 'tareas' ? 'text-white' : 'text-white/60'} />
               <span>Tareas</span>
             </div>
-            {activeModule === 'tareas' && <span className="w-1.5 h-1.5 bg-[#2E5BFF] rounded-full shadow-[0_0_8px_#2E5BFF]" />}
+            {activeModule === 'tareas' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
           </button>
         </nav>
 
@@ -1587,22 +1587,22 @@ export default function App() {
 
         {/* Company section */}
         {user && (
-          <div className="px-4 py-3 border-t border-slate-100/50">
+          <div className="px-4 py-3 border-t border-white/10">
             {(!companyName && !companyLogo) ? (
               <button 
                 onClick={() => setIsCompanyModalOpen(true)}
-                className="w-full p-2.5 rounded-xl border border-dashed border-slate-200 hover:border-[#2E5BFF]/40 bg-slate-50/50 hover:bg-[#2E5BFF]/5 flex items-center space-x-2.5 transition-all text-left group"
+                className="w-full p-2.5 rounded-xl border border-dashed border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 flex items-center space-x-2.5 transition-all text-left group"
               >
-                <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-400 group-hover:text-[#2E5BFF] group-hover:bg-[#2E5BFF]/10 flex items-center justify-center transition-all shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-white/10 text-white group-hover:scale-105 flex items-center justify-center transition-all shrink-0">
                   <Building2 size={16} />
                 </div>
                 <div className="overflow-hidden">
-                  <span className="text-[11px] font-bold text-slate-400 group-hover:text-[#2E5BFF] block leading-none transition-all">Agregar Empresa</span>
-                  <span className="text-[9px] text-slate-400 block mt-0.5 leading-none">Personalizar logo</span>
+                  <span className="text-[11px] font-bold text-white/90 block leading-none transition-all">Agregar Empresa</span>
+                  <span className="text-[9px] text-white/60 block mt-0.5 leading-none">Personalizar logo</span>
                 </div>
               </button>
             ) : (
-              <div className="w-full p-2 rounded-xl bg-slate-50/40 border border-slate-100/80 flex items-center justify-between group">
+              <div className="w-full p-2 rounded-xl bg-white/10 border border-white/10 flex items-center justify-between group">
                 <div className="flex items-center space-x-2.5 overflow-hidden">
                   {companyLogo ? (
                     <img 
@@ -1610,27 +1610,27 @@ export default function App() {
                       alt="Logo Empresa" 
                       className={`w-8 h-8 rounded-lg object-contain shrink-0 border ${
                         companyLogoBg === 'dark' 
-                          ? 'bg-slate-900 border-slate-850' 
+                          ? 'bg-slate-900 border-slate-800' 
                           : companyLogoBg === 'grid' 
-                          ? 'bg-white bg-[linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] bg-[size:8px_8px] bg-[position:0_0,0_4px,4px_-4px,-4px_0] border-slate-200/60' 
+                          ? 'bg-white border-slate-200/60' 
                           : 'bg-white border-slate-200/60'
                       }`}
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-lg bg-[#2E5BFF]/10 text-[#2E5BFF] flex items-center justify-center font-bold text-xs shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-white/10 text-white flex items-center justify-center font-bold text-xs shrink-0">
                       {companyName ? companyName.charAt(0).toUpperCase() : 'E'}
                     </div>
                   )}
                   <div className="overflow-hidden">
-                    <p className="text-xs font-bold text-slate-700 truncate leading-none">
+                    <p className="text-xs font-bold text-white truncate leading-none">
                       {companyName || 'Mi Empresa'}
                     </p>
-                    <span className="text-[9px] text-slate-400 block mt-1 leading-none">Empresa activa</span>
+                    <span className="text-[9px] text-white/60 block mt-1 leading-none">Empresa activa</span>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsCompanyModalOpen(true)}
-                  className="p-1 text-slate-400 hover:text-[#2E5BFF] hover:bg-[#2E5BFF]/5 rounded-lg transition-all"
+                  className="p-1 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
                   title="Configurar Empresa"
                 >
                   <Settings size={13} />
@@ -1642,31 +1642,31 @@ export default function App() {
 
         {/* User profile / Log out */}
         {user && (
-          <div className="p-4 border-t border-slate-100/80 bg-transparent flex items-center justify-between">
+          <div className="p-4 border-t border-white/10 bg-white/5 flex items-center justify-between">
             <div className="flex items-center space-x-2.5 overflow-hidden">
               {user.photoURL ? (
                 <img 
                   src={user.photoURL} 
                   alt="Avatar" 
                   referrerPolicy="no-referrer"
-                  className="w-9 h-9 rounded-full border border-slate-200/80 shrink-0" 
+                  className="w-9 h-9 rounded-full border border-white/20 shrink-0" 
                 />
               ) : (
-                <div className="w-9 h-9 bg-slate-100 text-slate-600 flex items-center justify-center font-bold rounded-full shrink-0">
+                <div className="w-9 h-9 bg-white/10 text-white flex items-center justify-center font-bold rounded-full shrink-0">
                   {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
                 </div>
               )}
               <div className="overflow-hidden">
-                <p className="text-xs font-semibold text-slate-700 truncate">
+                <p className="text-xs font-semibold text-white truncate">
                   {user.displayName || 'Usuario'}
                 </p>
-                <p className="text-[10px] text-slate-400 truncate">{user.email}</p>
+                <p className="text-[10px] text-white/70 truncate">{user.email}</p>
               </div>
             </div>
             <button
               id="logout-btn"
               onClick={handleLogout}
-              className="p-2 hover:bg-[#2E5BFF]/5 text-slate-400 hover:text-[#2E5BFF] rounded-lg transition-all"
+              className="p-2 hover:bg-white/10 text-white/75 hover:text-white rounded-lg transition-all"
               title="Cerrar Sesión"
             >
               <LogOut size={16} />
@@ -1679,25 +1679,25 @@ export default function App() {
       <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative">
         
         {/* Workspace Header */}
-        <header className="h-16 border-b border-white/40 bg-white/40 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between shrink-0 relative z-20">
+        <header className="h-16 border-b border-[#2C324A] bg-[#1E2235] text-white px-4 sm:px-6 flex items-center justify-between shrink-0 relative z-20 shadow-md">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             {/* Hamburger Menu Button */}
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 rounded-xl transition-all mr-1 shrink-0"
+              className="lg:hidden p-2 text-white hover:bg-white/10 rounded-xl transition-all mr-1 shrink-0"
               title="Abrir menú"
             >
               <Menu size={20} />
             </button>
 
-            <h2 className="text-base sm:text-lg font-extrabold text-slate-800 font-display tracking-tight truncate">
+            <h2 className="text-base sm:text-lg font-extrabold text-white font-display tracking-tight truncate">
               {activeModule === 'dashboard' ? 'Dashboard' : activeModule === 'clientes' ? 'Clientes' : activeModule === 'prospectos' ? 'Prospectos' : activeModule === 'ventas' ? 'Ventas' : activeModule === 'renovaciones' ? 'Renovaciones' : activeModule === 'tareas' ? 'Tareas' : 'Gastos'}
             </h2>
             
             {/* Sheet sync status pill */}
             {activeModule === 'dashboard' ? (
-              <span id="dashboard-sync-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-[#2E5BFF]/5 text-[#2E5BFF] text-xs font-semibold rounded-full border border-[#2E5BFF]/15 shadow-sm">
-                <Database size={13} className="text-[#2E5BFF]" />
+              <span id="dashboard-sync-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 shadow-sm">
+                <Database size={13} className="text-[#00F5D4]" />
                 <span>Datos Combinados</span>
               </span>
             ) : activeModule === 'clientes' ? (
@@ -1707,17 +1707,17 @@ export default function App() {
                   target="_blank"
                   rel="noreferrer"
                   id="connected-sheet-badge"
-                  className="flex items-center space-x-1.5 px-3 py-1 bg-[#2E5BFF]/5 hover:bg-[#2E5BFF]/10 text-[#2E5BFF] text-xs font-semibold rounded-full border border-[#2E5BFF]/15 transition-all shrink-0 shadow-sm"
+                  className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 hover:bg-white/15 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 transition-all shrink-0 shadow-sm"
                   title="Abrir hoja de Google Sheets en nueva pestaña"
                 >
-                  <FileSpreadsheet size={13} className="text-[#2E5BFF]" />
+                  <FileSpreadsheet size={13} className="text-[#00F5D4]" />
                   <span className="truncate max-w-[120px] sm:max-w-[180px]">Google Sheets: "{spreadsheetName}"</span>
                   <ExternalLink size={10} className="opacity-70" />
                 </a>
               ) : (
                 !isLoading && (
-                  <span id="no-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full border border-amber-100">
-                    <Database size={13} className="text-amber-500" />
+                  <span id="no-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-rose-500/15 text-rose-400 text-xs font-semibold rounded-full border border-rose-500/25">
+                    <Database size={13} className="text-rose-400" />
                     <span>Sin sincronizar</span>
                   </span>
                 )
@@ -1729,17 +1729,17 @@ export default function App() {
                   target="_blank"
                   rel="noreferrer"
                   id="connected-prospectos-sheet-badge"
-                  className="flex items-center space-x-1.5 px-3 py-1 bg-[#2E5BFF]/5 hover:bg-[#2E5BFF]/10 text-[#2E5BFF] text-xs font-semibold rounded-full border border-[#2E5BFF]/15 transition-all shrink-0 shadow-sm"
+                  className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 hover:bg-white/15 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 transition-all shrink-0 shadow-sm"
                   title="Abrir hoja de Google Sheets de Prospectos en nueva pestaña"
                 >
-                  <FileSpreadsheet size={13} className="text-[#2E5BFF]" />
+                  <FileSpreadsheet size={13} className="text-[#00F5D4]" />
                   <span className="truncate max-w-[120px] sm:max-w-[180px]">Google Sheets: "{prospectosSpreadsheetName || 'Prospectos'}"</span>
                   <ExternalLink size={10} className="opacity-70" />
                 </a>
               ) : (
                 !isLoading && (
-                  <span id="no-prospectos-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full border border-amber-100">
-                    <Database size={13} className="text-amber-500" />
+                  <span id="no-prospectos-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-rose-500/15 text-rose-400 text-xs font-semibold rounded-full border border-rose-500/25">
+                    <Database size={13} className="text-rose-400" />
                     <span>Sin sincronizar</span>
                   </span>
                 )
@@ -1751,17 +1751,17 @@ export default function App() {
                   target="_blank"
                   rel="noreferrer"
                   id="connected-ventas-sheet-badge"
-                  className="flex items-center space-x-1.5 px-3 py-1 bg-[#2E5BFF]/5 hover:bg-[#2E5BFF]/10 text-[#2E5BFF] text-xs font-semibold rounded-full border border-[#2E5BFF]/15 transition-all shrink-0 shadow-sm"
+                  className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 hover:bg-white/15 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 transition-all shrink-0 shadow-sm"
                   title="Abrir hoja de Google Sheets de Ventas en nueva pestaña"
                 >
-                  <FileSpreadsheet size={13} className="text-[#2E5BFF]" />
+                  <FileSpreadsheet size={13} className="text-[#00F5D4]" />
                   <span className="truncate max-w-[120px] sm:max-w-[180px]">Google Sheets: "{ventasSpreadsheetName || 'Ventas'}"</span>
                   <ExternalLink size={10} className="opacity-70" />
                 </a>
               ) : (
                 !isLoading && (
-                  <span id="no-ventas-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full border border-amber-100">
-                    <Database size={13} className="text-amber-500" />
+                  <span id="no-ventas-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-rose-500/15 text-rose-400 text-xs font-semibold rounded-full border border-rose-500/25">
+                    <Database size={13} className="text-rose-400" />
                     <span>Sin sincronizar</span>
                   </span>
                 )
@@ -1773,17 +1773,17 @@ export default function App() {
                   target="_blank"
                   rel="noreferrer"
                   id="connected-renovaciones-sheet-badge"
-                  className="flex items-center space-x-1.5 px-3 py-1 bg-[#2E5BFF]/5 hover:bg-[#2E5BFF]/10 text-[#2E5BFF] text-xs font-semibold rounded-full border border-[#2E5BFF]/15 transition-all shrink-0 shadow-sm"
+                  className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 hover:bg-white/15 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 transition-all shrink-0 shadow-sm"
                   title="Abrir hoja de Google Sheets de Renovaciones en nueva pestaña"
                 >
-                  <FileSpreadsheet size={13} className="text-[#2E5BFF]" />
+                  <FileSpreadsheet size={13} className="text-[#00F5D4]" />
                   <span className="truncate max-w-[120px] sm:max-w-[180px]">Google Sheets: "{renovacionesSpreadsheetName || 'Renovaciones'}"</span>
                   <ExternalLink size={10} className="opacity-70" />
                 </a>
               ) : (
                 !isLoading && (
-                  <span id="no-renovaciones-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full border border-amber-100">
-                    <Database size={13} className="text-amber-500" />
+                  <span id="no-renovaciones-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-rose-500/15 text-rose-400 text-xs font-semibold rounded-full border border-rose-500/25">
+                    <Database size={13} className="text-rose-400" />
                     <span>Sin sincronizar</span>
                   </span>
                 )
@@ -1795,17 +1795,17 @@ export default function App() {
                   target="_blank"
                   rel="noreferrer"
                   id="connected-gastos-sheet-badge"
-                  className="flex items-center space-x-1.5 px-3 py-1 bg-[#2E5BFF]/5 hover:bg-[#2E5BFF]/10 text-[#2E5BFF] text-xs font-semibold rounded-full border border-[#2E5BFF]/15 transition-all shrink-0 shadow-sm"
+                  className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 hover:bg-white/15 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 transition-all shrink-0 shadow-sm"
                   title="Abrir hoja de Google Sheets de Gastos en nueva pestaña"
                 >
-                  <FileSpreadsheet size={13} className="text-[#2E5BFF]" />
+                  <FileSpreadsheet size={13} className="text-[#00F5D4]" />
                   <span className="truncate max-w-[120px] sm:max-w-[180px]">Google Sheets: "{gastosSpreadsheetName || 'Gastos'}"</span>
                   <ExternalLink size={10} className="opacity-70" />
                 </a>
               ) : (
                 !isLoading && (
-                  <span id="no-gastos-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full border border-amber-100">
-                    <Database size={13} className="text-amber-500" />
+                  <span id="no-gastos-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-rose-500/15 text-rose-400 text-xs font-semibold rounded-full border border-rose-500/25">
+                    <Database size={13} className="text-rose-400" />
                     <span>Sin sincronizar</span>
                   </span>
                 )
@@ -1817,17 +1817,17 @@ export default function App() {
                   target="_blank"
                   rel="noreferrer"
                   id="connected-tareas-sheet-badge"
-                  className="flex items-center space-x-1.5 px-3 py-1 bg-[#2E5BFF]/5 hover:bg-[#2E5BFF]/10 text-[#2E5BFF] text-xs font-semibold rounded-full border border-[#2E5BFF]/15 transition-all shrink-0 shadow-sm"
+                  className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 hover:bg-white/15 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 transition-all shrink-0 shadow-sm"
                   title="Abrir hoja de Google Sheets de Tareas en nueva pestaña"
                 >
-                  <FileSpreadsheet size={13} className="text-[#2E5BFF]" />
+                  <FileSpreadsheet size={13} className="text-[#00F5D4]" />
                   <span className="truncate max-w-[120px] sm:max-w-[180px]">Google Sheets: "{tareasSpreadsheetName || 'Tareas'}"</span>
                   <ExternalLink size={10} className="opacity-70" />
                 </a>
               ) : (
                 !isLoading && (
-                  <span id="no-tareas-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full border border-amber-100">
-                    <Database size={13} className="text-amber-500" />
+                  <span id="no-tareas-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-rose-500/15 text-rose-400 text-xs font-semibold rounded-full border border-rose-500/25">
+                    <Database size={13} className="text-rose-400" />
                     <span>Sin sincronizar</span>
                   </span>
                 )
@@ -1841,7 +1841,7 @@ export default function App() {
               href="https://www.empresarioenlinea.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 bg-white/60 hover:bg-white text-slate-600 hover:text-orange-600 border border-slate-100 hover:border-orange-100 rounded-full transition-all text-xs font-semibold shadow-sm hover:shadow-md group mr-1"
+              className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/15 text-white/90 hover:text-white border border-white/10 hover:border-orange-500/20 rounded-full transition-all text-xs font-semibold shadow-sm hover:shadow-md group mr-1"
               title="Visitar EmpresarioPuntoCom"
             >
               <div className="w-5 h-3.5 flex items-center justify-center shrink-0">
@@ -1861,9 +1861,9 @@ export default function App() {
                   <circle cx="77" cy="51" r="3" fill="#FF6600"/>
                 </svg>
               </div>
-              <span className="hidden md:inline">AI Partner:</span>
-              <span className="text-orange-600 group-hover:text-orange-700 font-bold text-[11px] md:text-xs">EmpresarioPuntoCom</span>
-              <ExternalLink size={10} className="text-slate-400 group-hover:text-orange-500 transition-colors" />
+              <span className="hidden md:inline text-slate-300">AI Partner:</span>
+              <span className="text-orange-400 group-hover:text-orange-300 font-bold text-[11px] md:text-xs">EmpresarioPuntoCom</span>
+              <ExternalLink size={10} className="text-slate-300 group-hover:text-orange-400 transition-colors" />
             </a>
 
             {(activeModule === 'dashboard' ||
@@ -1877,7 +1877,7 @@ export default function App() {
                 id="refresh-data-btn"
                 onClick={() => loadSpreadsheetData(token!)}
                 disabled={isLoading}
-                className="p-2 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded-xl transition-all"
+                className="p-2 hover:bg-white/10 text-white/85 hover:text-white rounded-xl transition-all"
                 title="Actualizar datos manualmente"
               >
                 <RefreshCw size={16} className={`${isLoading ? 'animate-spin' : ''}`} />
@@ -2176,13 +2176,13 @@ export default function App() {
               {/* Data controls & filters bar */}
               <div 
                 id="search-filter-controls"
-                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center mb-6"
+                className="bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(46,91,255,0.12)] flex flex-col sm:flex-row gap-4 justify-between items-center mb-6 border-0"
               >
                 {/* Left Side: Search and Status filter */}
                 <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-3 flex-1 max-w-2xl">
                   {/* Search bar */}
                   <div className="relative w-full">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-white/60 pointer-events-none">
                       <Search size={18} />
                     </span>
                     <input
@@ -2191,12 +2191,12 @@ export default function App() {
                       placeholder="Buscar por Empresa, Contacto, Servicio..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white placeholder-white/60 transition-all [color-scheme:dark]"
                     />
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery('')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/60 hover:text-white"
                       >
                         <X size={15} />
                       </button>
@@ -2209,13 +2209,13 @@ export default function App() {
                       id="status-filter"
                       value={estadoFilter}
                       onChange={(e) => setEstadoFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm text-slate-600 bg-white"
+                      className="w-full px-3 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white transition-all [color-scheme:dark]"
                     >
-                      <option value="Todos">📂 Todos los estados</option>
-                      <option value="Activo">🟢 Activo</option>
-                      <option value="Inactivo">🔴 Inactivo</option>
-                      <option value="Vencido">⚠️ Vencido</option>
-                      <option value="Pendiente">🟡 Pendiente</option>
+                      <option value="Todos" className="text-slate-800 bg-white">📂 Todos los estados</option>
+                      <option value="Activo" className="text-slate-800 bg-white">🟢 Activo</option>
+                      <option value="Inactivo" className="text-slate-800 bg-white">🔴 Inactivo</option>
+                      <option value="Vencido" className="text-slate-800 bg-white">⚠️ Vencido</option>
+                      <option value="Pendiente" className="text-slate-800 bg-white">🟡 Pendiente</option>
                     </select>
                   </div>
                 </div>
@@ -2225,7 +2225,7 @@ export default function App() {
                   <button
                     id="export-excel-btn"
                     onClick={handleExport}
-                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-bold text-white bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2 backdrop-blur-sm"
                     title="Exportar registros filtrados a CSV para Excel"
                   >
                     <Download size={16} />
@@ -2235,7 +2235,7 @@ export default function App() {
                   <button
                     id="add-cliente-btn"
                     onClick={handleOpenAddForm}
-                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm shadow-emerald-600/10 transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-bold text-[#1D9BF0] bg-white hover:bg-white/95 rounded-xl shadow-md shadow-white/5 transition-all flex items-center justify-center space-x-2"
                   >
                     <Plus size={16} />
                     <span>Agregar Cliente</span>
@@ -2443,13 +2443,13 @@ export default function App() {
               {/* Data controls & filters bar */}
               <div 
                 id="prospectos-search-filter-controls"
-                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center mb-6"
+                className="bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(46,91,255,0.12)] flex flex-col sm:flex-row gap-4 justify-between items-center mb-6 border-0"
               >
                 {/* Left Side: Search and Status filter */}
                 <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-3 flex-1 max-w-2xl">
                   {/* Search bar */}
                   <div className="relative w-full">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-white/60 pointer-events-none">
                       <Search size={18} />
                     </span>
                     <input
@@ -2458,12 +2458,12 @@ export default function App() {
                       placeholder="Buscar por Empresa, Contacto, Servicio..."
                       value={prospectosSearchQuery}
                       onChange={(e) => setProspectosSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white placeholder-white/60 transition-all [color-scheme:dark]"
                     />
                     {prospectosSearchQuery && (
                       <button
                         onClick={() => setProspectosSearchQuery('')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/60 hover:text-white"
                       >
                         <X size={15} />
                       </button>
@@ -2476,15 +2476,15 @@ export default function App() {
                       id="prospectos-status-filter"
                       value={prospectosEstadoFilter}
                       onChange={(e) => setProspectosEstadoFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm text-slate-600 bg-white"
+                      className="w-full px-3 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white transition-all [color-scheme:dark]"
                     >
-                      <option value="Todos">📂 Todos los estados</option>
-                      <option value="Nuevo">🔵 Nuevo</option>
-                      <option value="Contactado">🟡 Contactado</option>
-                      <option value="En negociación">🟠 En negociación</option>
-                      <option value="Propuesta enviada">🟣 Propuesta enviada</option>
-                      <option value="Ganado">🟢 Ganado</option>
-                      <option value="Perdido">🔴 Perdido</option>
+                      <option value="Todos" className="text-slate-800 bg-white">📂 Todos los estados</option>
+                      <option value="Nuevo" className="text-slate-800 bg-white">🔵 Nuevo</option>
+                      <option value="Contactado" className="text-slate-800 bg-white">🟡 Contactado</option>
+                      <option value="En negociación" className="text-slate-800 bg-white">🟠 En negociación</option>
+                      <option value="Propuesta enviada" className="text-slate-800 bg-white">🟣 Propuesta enviada</option>
+                      <option value="Ganado" className="text-slate-800 bg-white">🟢 Ganado</option>
+                      <option value="Perdido" className="text-slate-800 bg-white">🔴 Perdido</option>
                     </select>
                   </div>
                 </div>
@@ -2494,7 +2494,7 @@ export default function App() {
                   <button
                     id="prospectos-export-excel-btn"
                     onClick={handleExportProspectos}
-                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-bold text-white bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2 backdrop-blur-sm"
                     title="Exportar registros filtrados a CSV para Excel"
                   >
                     <Download size={16} />
@@ -2504,7 +2504,7 @@ export default function App() {
                   <button
                     id="add-prospecto-btn"
                     onClick={handleOpenAddProspectoForm}
-                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm shadow-emerald-600/10 transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-bold text-[#1D9BF0] bg-white hover:bg-white/95 rounded-xl shadow-md shadow-white/5 transition-all flex items-center justify-center space-x-2"
                   >
                     <Plus size={16} />
                     <span>Agregar Prospecto</span>
@@ -2722,13 +2722,13 @@ export default function App() {
               {/* Data controls & filters bar */}
               <div 
                 id="ventas-search-filter-controls"
-                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col xl:flex-row gap-4 justify-between items-center mb-6"
+                className="bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(46,91,255,0.12)] flex flex-col xl:flex-row gap-4 justify-between items-center mb-6 border-0"
               >
                 {/* Left Side: Search, Status filter, and Date filters */}
                 <div className="w-full xl:w-auto flex flex-col md:flex-row items-center gap-3 flex-1 max-w-5xl">
                   {/* Search bar */}
                   <div className="relative w-full md:w-72 shrink-0">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-white/60 pointer-events-none">
                       <Search size={18} />
                     </span>
                     <input
@@ -2737,12 +2737,12 @@ export default function App() {
                       placeholder="Buscar por Cliente, Servicio..."
                       value={ventasSearchQuery}
                       onChange={(e) => setVentasSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white placeholder-white/60 transition-all [color-scheme:dark]"
                     />
                     {ventasSearchQuery && (
                       <button
                         onClick={() => setVentasSearchQuery('')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/60 hover:text-white"
                       >
                         <X size={15} />
                       </button>
@@ -2755,35 +2755,35 @@ export default function App() {
                       id="ventas-status-filter"
                       value={ventasEstadoFilter}
                       onChange={(e) => setVentasEstadoFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm text-slate-600 bg-white"
+                      className="w-full px-3 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white transition-all [color-scheme:dark]"
                     >
-                      <option value="Todos">💵 Todos los pagos</option>
-                      <option value="Pagado">🟢 Pagado</option>
-                      <option value="Pendiente">🟡 Pendiente</option>
-                      <option value="Vencido">🔴 Vencido</option>
+                      <option value="Todos" className="text-slate-800 bg-white">💵 Todos los pagos</option>
+                      <option value="Pagado" className="text-slate-800 bg-white">🟢 Pagado</option>
+                      <option value="Pendiente" className="text-slate-800 bg-white">🟡 Pendiente</option>
+                      <option value="Vencido" className="text-slate-800 bg-white">🔴 Vencido</option>
                     </select>
                   </div>
 
                   {/* Date Filters ("Filtrar por fecha") */}
                   <div className="w-full flex flex-col sm:flex-row items-center gap-2">
                     <div className="w-full relative flex items-center">
-                      <span className="absolute left-3 text-[10px] uppercase font-bold text-slate-400">Desde</span>
+                      <span className="absolute left-3 text-[10px] uppercase font-bold text-white/70">Desde</span>
                       <input
                         type="date"
                         id="ventas-fecha-desde"
                         value={ventasFechaDesde}
                         onChange={(e) => setVentasFechaDesde(e.target.value)}
-                        className="w-full pl-14 pr-3 py-1.5 border border-slate-200 rounded-xl text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                        className="w-full pl-14 pr-3 py-1.5 bg-white/15 border border-white/20 rounded-xl text-xs text-white focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all [color-scheme:dark]"
                       />
                     </div>
                     <div className="w-full relative flex items-center">
-                      <span className="absolute left-3 text-[10px] uppercase font-bold text-slate-400">Hasta</span>
+                      <span className="absolute left-3 text-[10px] uppercase font-bold text-white/70">Hasta</span>
                       <input
                         type="date"
                         id="ventas-fecha-hasta"
                         value={ventasFechaHasta}
                         onChange={(e) => setVentasFechaHasta(e.target.value)}
-                        className="w-full pl-14 pr-3 py-1.5 border border-slate-200 rounded-xl text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                        className="w-full pl-14 pr-3 py-1.5 bg-white/15 border border-white/20 rounded-xl text-xs text-white focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white transition-all [color-scheme:dark]"
                       />
                     </div>
                     {(ventasFechaDesde || ventasFechaHasta) && (
@@ -2792,7 +2792,7 @@ export default function App() {
                           setVentasFechaDesde('');
                           setVentasFechaHasta('');
                         }}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+                        className="p-1.5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
                         title="Limpiar fechas"
                       >
                         <X size={15} />
@@ -2806,7 +2806,7 @@ export default function App() {
                   <button
                     id="ventas-export-excel-btn"
                     onClick={handleExportVentas}
-                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-bold text-white bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2 backdrop-blur-sm"
                     title="Exportar registros filtrados a CSV para Excel"
                   >
                     <Download size={16} />
@@ -2816,7 +2816,7 @@ export default function App() {
                   <button
                     id="add-venta-btn"
                     onClick={handleOpenAddVentaForm}
-                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm shadow-emerald-600/10 transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-bold text-[#1D9BF0] bg-white hover:bg-white/95 rounded-xl shadow-md shadow-white/5 transition-all flex items-center justify-center space-x-2"
                   >
                     <Plus size={16} />
                     <span>Registrar Venta</span>
@@ -2969,13 +2969,13 @@ export default function App() {
               {/* Data controls & filters bar */}
               <div 
                 id="renovaciones-search-filter-controls"
-                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col xl:flex-row gap-4 justify-between items-center mb-6"
+                className="bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(46,91,255,0.12)] flex flex-col xl:flex-row gap-4 justify-between items-center mb-6 border-0"
               >
                 {/* Left Side: Search and filters */}
                 <div className="w-full xl:w-auto flex flex-col md:flex-row items-center gap-3 flex-1 max-w-4xl">
                   {/* Search bar */}
                   <div className="relative w-full md:flex-1">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-white/60 pointer-events-none">
                       <Search size={18} />
                     </span>
                     <input
@@ -2984,12 +2984,12 @@ export default function App() {
                       placeholder="Buscar por Cliente, Servicio o ID..."
                       value={renovacionesSearchQuery}
                       onChange={(e) => setRenovacionesSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white placeholder-white/60 transition-all [color-scheme:dark]"
                     />
                     {renovacionesSearchQuery && (
                       <button
                         onClick={() => setRenovacionesSearchQuery('')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/60 hover:text-white"
                       >
                         <X size={15} />
                       </button>
@@ -3002,12 +3002,12 @@ export default function App() {
                       id="renovaciones-estado-filter"
                       value={renovacionesEstadoFilter}
                       onChange={(e) => setRenovacionesEstadoFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm text-slate-600 bg-white"
+                      className="w-full px-3 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white transition-all [color-scheme:dark]"
                     >
-                      <option value="Todos">📊 Estado: Todos</option>
-                      <option value="Activo">🟢 Activo</option>
-                      <option value="Pendiente">🟡 Pendiente</option>
-                      <option value="Vencido">🔴 Vencido</option>
+                      <option value="Todos" className="text-slate-800 bg-white">📊 Estado: Todos</option>
+                      <option value="Activo" className="text-slate-800 bg-white">🟢 Activo</option>
+                      <option value="Pendiente" className="text-slate-800 bg-white">🟡 Pendiente</option>
+                      <option value="Vencido" className="text-slate-800 bg-white">🔴 Vencido</option>
                     </select>
                   </div>
                 </div>
@@ -3017,7 +3017,7 @@ export default function App() {
                   <button
                     id="renovaciones-export-excel-btn"
                     onClick={handleExportRenovaciones}
-                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-bold text-white bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2 backdrop-blur-sm"
                     title="Exportar registros filtrados a CSV para Excel"
                   >
                     <Download size={16} />
@@ -3027,7 +3027,7 @@ export default function App() {
                   <button
                     id="add-renovacion-btn"
                     onClick={handleOpenAddRenovacionForm}
-                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm shadow-emerald-600/10 transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-bold text-[#1D9BF0] bg-white hover:bg-white/95 rounded-xl shadow-md shadow-white/5 transition-all flex items-center justify-center space-x-2"
                   >
                     <Plus size={16} />
                     <span>Nueva Renovación</span>
@@ -3236,13 +3236,13 @@ export default function App() {
               {/* Data controls & filters bar */}
               <div 
                 id="tareas-search-filter-controls"
-                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col xl:flex-row gap-4 justify-between items-center mb-6"
+                className="bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(46,91,255,0.12)] flex flex-col xl:flex-row gap-4 justify-between items-center mb-6 border-0"
               >
                 {/* Left Side: Search and filters */}
                 <div className="w-full xl:w-auto flex flex-col md:flex-row items-center gap-3 flex-1 max-w-4xl">
                   {/* Search bar */}
                   <div className="relative w-full md:flex-1">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-white/60 pointer-events-none">
                       <Search size={18} />
                     </span>
                     <input
@@ -3251,12 +3251,12 @@ export default function App() {
                       placeholder="Buscar por Título, Descripción o ID..."
                       value={tareasSearchQuery}
                       onChange={(e) => setTareasSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white placeholder-white/60 transition-all [color-scheme:dark]"
                     />
                     {tareasSearchQuery && (
                       <button
                         onClick={() => setTareasSearchQuery('')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/60 hover:text-white"
                       >
                         <X size={15} />
                       </button>
@@ -3269,12 +3269,12 @@ export default function App() {
                       id="tareas-prioridad-filter"
                       value={tareasPrioridadFilter}
                       onChange={(e) => setTareasPrioridadFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm text-slate-600 bg-white"
+                      className="w-full px-3 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white transition-all [color-scheme:dark]"
                     >
-                      <option value="Todos">🔥 Prioridad: Todas</option>
-                      <option value="Alta">🔴 Alta</option>
-                      <option value="Media">🟡 Media</option>
-                      <option value="Baja">🔵 Baja</option>
+                      <option value="Todos" className="text-slate-800 bg-white">🔥 Prioridad: Todas</option>
+                      <option value="Alta" className="text-slate-800 bg-white">🔴 Alta</option>
+                      <option value="Media" className="text-slate-800 bg-white">🟡 Media</option>
+                      <option value="Baja" className="text-slate-800 bg-white">🔵 Baja</option>
                     </select>
                   </div>
 
@@ -3284,11 +3284,11 @@ export default function App() {
                       id="tareas-estado-filter"
                       value={tareasEstadoFilter}
                       onChange={(e) => setTareasEstadoFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm text-slate-600 bg-white"
+                      className="w-full px-3 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white transition-all [color-scheme:dark]"
                     >
-                      <option value="Todos">📊 Estado: Todos</option>
-                      <option value="Pendiente">⏳ Pendiente</option>
-                      <option value="Completada">✅ Completada</option>
+                      <option value="Todos" className="text-slate-800 bg-white">📊 Estado: Todos</option>
+                      <option value="Pendiente" className="text-slate-800 bg-white">⏳ Pendiente</option>
+                      <option value="Completada" className="text-slate-800 bg-white">✅ Completada</option>
                     </select>
                   </div>
                 </div>
@@ -3298,7 +3298,7 @@ export default function App() {
                   <button
                     id="tareas-export-excel-btn"
                     onClick={handleExportTareas}
-                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-bold text-white bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2 backdrop-blur-sm"
                     title="Exportar registros filtrados a CSV para Excel"
                   >
                     <Download size={16} />
@@ -3308,7 +3308,7 @@ export default function App() {
                   <button
                     id="add-tarea-btn"
                     onClick={handleOpenAddTareaForm}
-                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm shadow-emerald-600/10 transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-bold text-[#1D9BF0] bg-white hover:bg-white/95 rounded-xl shadow-md shadow-white/5 transition-all flex items-center justify-center space-x-2"
                   >
                     <Plus size={16} />
                     <span>Nueva Tarea</span>
@@ -3478,13 +3478,13 @@ export default function App() {
               {/* Data controls & filters bar */}
               <div 
                 id="gastos-search-filter-controls"
-                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col xl:flex-row gap-4 justify-between items-center mb-6"
+                className="bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(46,91,255,0.12)] flex flex-col xl:flex-row gap-4 justify-between items-center mb-6 border-0"
               >
                 {/* Left Side: Search and filters */}
                 <div className="w-full xl:w-auto flex flex-col md:flex-row items-center gap-3 flex-1 max-w-4xl">
                   {/* Search bar */}
                   <div className="relative w-full md:flex-1">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-white/60 pointer-events-none">
                       <Search size={18} />
                     </span>
                     <input
@@ -3493,12 +3493,12 @@ export default function App() {
                       placeholder="Buscar por Categoría, Descripción, ID..."
                       value={gastosSearchQuery}
                       onChange={(e) => setGastosSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white placeholder-white/60 transition-all [color-scheme:dark]"
                     />
                     {gastosSearchQuery && (
                       <button
                         onClick={() => setGastosSearchQuery('')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/60 hover:text-white"
                       >
                         <X size={15} />
                       </button>
@@ -3511,15 +3511,15 @@ export default function App() {
                       id="gastos-category-filter"
                       value={gastosCategoriaFilter}
                       onChange={(e) => setGastosCategoriaFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm text-slate-600 bg-white"
+                      className="w-full px-3 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white transition-all [color-scheme:dark]"
                     >
-                      <option value="Todos">📂 Categoría: Todas</option>
-                      <option value="Marketing">📢 Marketing</option>
-                      <option value="Personal">👥 Personal</option>
-                      <option value="Tecnología">💻 Tecnología</option>
-                      <option value="Servicios Públicos">🔌 Servicios Públicos</option>
-                      <option value="Oficina">🏢 Oficina</option>
-                      <option value="Otros">📦 Otros</option>
+                      <option value="Todos" className="text-slate-800 bg-white">📂 Categoría: Todas</option>
+                      <option value="Marketing" className="text-slate-800 bg-white">📢 Marketing</option>
+                      <option value="Personal" className="text-slate-800 bg-white">👥 Personal</option>
+                      <option value="Tecnología" className="text-slate-800 bg-white">💻 Tecnología</option>
+                      <option value="Servicios Públicos" className="text-slate-800 bg-white">🔌 Servicios Públicos</option>
+                      <option value="Oficina" className="text-slate-800 bg-white">🏢 Oficina</option>
+                      <option value="Otros" className="text-slate-800 bg-white">📦 Otros</option>
                     </select>
                   </div>
 
@@ -3530,16 +3530,16 @@ export default function App() {
                       id="gastos-fecha-desde"
                       value={gastosFechaDesde}
                       onChange={(e) => setGastosFechaDesde(e.target.value)}
-                      className="px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm text-slate-600 bg-white"
+                      className="px-3 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white transition-all [color-scheme:dark]"
                       title="Fecha desde"
                     />
-                    <span className="text-slate-400 text-xs font-semibold">a</span>
+                    <span className="text-white/60 text-xs font-semibold">a</span>
                     <input
                       type="date"
                       id="gastos-fecha-hasta"
                       value={gastosFechaHasta}
                       onChange={(e) => setGastosFechaHasta(e.target.value)}
-                      className="px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm text-slate-600 bg-white"
+                      className="px-3 py-2 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-sm text-white transition-all [color-scheme:dark]"
                       title="Fecha hasta"
                     />
                     {(gastosFechaDesde || gastosFechaHasta) && (
@@ -3548,7 +3548,7 @@ export default function App() {
                           setGastosFechaDesde('');
                           setGastosFechaHasta('');
                         }}
-                        className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600"
+                        className="p-2 hover:bg-white/10 rounded-lg text-white/60 hover:text-white"
                         title="Limpiar fechas"
                       >
                         <X size={14} />
@@ -3562,7 +3562,7 @@ export default function App() {
                   <button
                     id="gastos-export-excel-btn"
                     onClick={handleExportGastos}
-                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-bold text-white bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2 backdrop-blur-sm"
                     title="Exportar registros filtrados a CSV para Excel"
                   >
                     <Download size={16} />
@@ -3572,7 +3572,7 @@ export default function App() {
                   <button
                     id="add-gasto-btn"
                     onClick={handleOpenAddGastoForm}
-                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm shadow-emerald-600/10 transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 sm:flex-none px-5 py-2 text-sm font-bold text-[#1D9BF0] bg-white hover:bg-white/95 rounded-xl shadow-md shadow-white/5 transition-all flex items-center justify-center space-x-2"
                   >
                     <Plus size={16} />
                     <span>Crear Gasto</span>

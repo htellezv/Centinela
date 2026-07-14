@@ -349,11 +349,11 @@ export default function Dashboard({
       {/* Ambient Liquid Glass Background Glow Blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         {/* Blob 1: Centinela Primary Electric Blue */}
-        <div className="absolute top-[-5%] left-[-5%] w-[45%] h-[45%] rounded-full bg-[#2E5BFF]/10 blur-[130px]" />
+        <div className="absolute top-[-5%] left-[-5%] w-[45%] h-[45%] rounded-full bg-gradient-to-tr from-[#2E5BFF] to-[#00F5D4] opacity-15 blur-[120px] animate-pulse duration-[8s]" />
         {/* Blob 2: Secondary Sky Blue */}
-        <div className="absolute top-[35%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#60A5FA]/10 blur-[120px]" />
+        <div className="absolute top-[35%] right-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-br from-[#1D9BF0] to-[#00F5D4] opacity-15 blur-[100px] animate-pulse duration-[10s]" />
         {/* Blob 3: Tertiary Magenta/Pink */}
-        <div className="absolute bottom-[-5%] left-[15%] w-[50%] h-[50%] rounded-full bg-[#FF5CE3]/5 blur-[140px]" />
+        <div className="absolute bottom-[-5%] left-[15%] w-[50%] h-[50%] rounded-full bg-gradient-to-tl from-[#FF5CE3] to-[#2E5BFF] opacity-10 blur-[130px]" />
       </div>
 
       <div className="relative z-10 space-y-6">
@@ -361,28 +361,28 @@ export default function Dashboard({
         {/* HEADER BAR AND FILTERS CONTROL PANEL */}
         <div 
           id="dashboard-filter-header"
-          className="bg-white/45 backdrop-blur-lg border border-white/85 shadow-[0_8px_32px_0_rgba(46,91,255,0.04)] p-5 rounded-3xl flex flex-col lg:flex-row gap-4 items-center justify-between"
+          className="bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white shadow-[0_15px_40px_rgba(46,91,255,0.15)] p-5 rounded-3xl flex flex-col lg:flex-row gap-4 items-center justify-between transition-all duration-300 border-0"
         >
           <div className="flex items-center space-x-3.5 self-start lg:self-auto">
-            <div className="p-3 bg-[#2E5BFF]/10 text-[#2E5BFF] rounded-2xl border border-blue-500/20 shadow-sm shadow-blue-500/5">
+            <div className="p-3 bg-white/15 text-white rounded-2xl border border-white/20 shadow-sm">
               <LayoutDashboard size={24} className="stroke-[1.5]" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-slate-800 font-display tracking-tight">Dashboard de Gestión</h2>
-              <p className="text-xs text-slate-500 font-mono mt-0.5">Visión integrada y analítica del negocio</p>
+              <h2 className="text-xl font-extrabold text-white font-display tracking-tight">Dashboard de Gestión</h2>
+              <p className="text-xs text-white/80 font-mono mt-0.5">Visión integrada y analítica del negocio</p>
             </div>
           </div>
 
           {/* Date Filter & Preset Controls */}
           <div className="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-3.5">
             {/* Preset Buttons */}
-            <div className="flex bg-slate-200/30 p-1 rounded-xl w-full sm:w-auto overflow-x-auto border border-slate-200/10 backdrop-blur-sm">
+            <div className="flex bg-white/10 p-1 rounded-xl w-full sm:w-auto overflow-x-auto border border-white/10 backdrop-blur-sm">
               <button
                 onClick={() => handlePresetChange('all')}
                 className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   datePreset === 'all'
-                    ? 'bg-white text-[#2E5BFF] shadow-[0_4px_12px_rgba(46,91,255,0.06)] border border-blue-100/50'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-[#1D9BF0] shadow-[0_4px_12px_rgba(255,255,255,0.15)] border-0'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 Todo
@@ -391,8 +391,8 @@ export default function Dashboard({
                 onClick={() => handlePresetChange('this-month')}
                 className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   datePreset === 'this-month'
-                    ? 'bg-white text-[#2E5BFF] shadow-[0_4px_12px_rgba(46,91,255,0.06)] border border-blue-100/50'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-[#1D9BF0] shadow-[0_4px_12px_rgba(255,255,255,0.15)] border-0'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 Este Mes
@@ -401,8 +401,8 @@ export default function Dashboard({
                 onClick={() => handlePresetChange('last-30')}
                 className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   datePreset === 'last-30'
-                    ? 'bg-white text-[#2E5BFF] shadow-[0_4px_12px_rgba(46,91,255,0.06)] border border-blue-100/50'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-[#1D9BF0] shadow-[0_4px_12px_rgba(255,255,255,0.15)] border-0'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 Últimos 30 Días
@@ -411,8 +411,8 @@ export default function Dashboard({
                 onClick={() => handlePresetChange('this-year')}
                 className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   datePreset === 'this-year'
-                    ? 'bg-white text-[#2E5BFF] shadow-[0_4px_12px_rgba(46,91,255,0.06)] border border-blue-100/50'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-[#1D9BF0] shadow-[0_4px_12px_rgba(255,255,255,0.15)] border-0'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 Este Año
@@ -429,12 +429,12 @@ export default function Dashboard({
                      setStartDateStr(e.target.value);
                      setDatePreset('custom');
                    }}
-                   className="w-full sm:w-[135px] pl-2 pr-2 py-1.5 bg-white/85 border border-slate-200/50 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-[#2E5BFF] text-xs text-slate-600 font-bold cursor-pointer shadow-sm shadow-slate-100/50 transition-all"
+                   className="w-full sm:w-[135px] pl-2 pr-2 py-1.5 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-xs text-white font-bold cursor-pointer shadow-sm transition-all [color-scheme:dark]"
                    placeholder="Desde"
                    title="Fecha de Inicio"
                  />
                </div>
-               <span className="text-slate-400 text-xs font-bold font-mono">a</span>
+               <span className="text-white/60 text-xs font-bold font-mono">a</span>
                <div className="relative">
                  <input
                    type="date"
@@ -443,7 +443,7 @@ export default function Dashboard({
                      setEndDateStr(e.target.value);
                      setDatePreset('custom');
                    }}
-                   className="w-full sm:w-[135px] pl-2 pr-2 py-1.5 bg-white/85 border border-slate-200/50 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-[#2E5BFF] text-xs text-slate-600 font-bold cursor-pointer shadow-sm shadow-slate-100/50 transition-all"
+                   className="w-full sm:w-[135px] pl-2 pr-2 py-1.5 bg-white/15 border border-white/20 rounded-xl focus:outline-none focus:ring-4 focus:ring-white/10 focus:border-white text-xs text-white font-bold cursor-pointer shadow-sm transition-all [color-scheme:dark]"
                    placeholder="Hasta"
                    title="Fecha de Vencimiento"
                  />
@@ -456,7 +456,7 @@ export default function Dashboard({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           
           {/* KPI 1: VENTAS (Primary Electric Blue Theme) */}
-          <div className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(46,91,255,0.03)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:bg-white/65 hover:border-blue-300/60 hover:shadow-[0_12px_40px_rgba(46,91,255,0.06)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-[#2E5BFF]/50 before:to-transparent">
+          <div className="bg-white/85 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(46,91,255,0.05)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-400/50 hover:shadow-[0_22px_45px_rgba(46,91,255,0.12)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-[#2E5BFF] before:to-transparent">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="text-[11px] font-bold text-[#2E5BFF] uppercase tracking-widest block">Ventas</span>
@@ -468,7 +468,7 @@ export default function Dashboard({
                 <TrendingUp size={18} />
               </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-white/60 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <span className="font-bold text-slate-600">{filteredVentas.length} Transacciones</span>
               <span className="text-[#2E5BFF] font-mono font-bold flex items-center">
                 <Check size={12} className="mr-0.5" />
@@ -478,7 +478,7 @@ export default function Dashboard({
           </div>
 
           {/* KPI 2: CLIENTES (Neutral Slate/Blue Theme) */}
-          <div className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(71,85,105,0.03)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:bg-white/65 hover:border-slate-300/60 hover:shadow-[0_12px_40px_rgba(71,85,105,0.06)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-slate-400/50 before:to-transparent">
+          <div className="bg-white/85 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(71,85,105,0.05)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:scale-[1.02] hover:-translate-y-1 hover:border-slate-400/50 hover:shadow-[0_22px_45px_rgba(71,85,105,0.12)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-slate-400 before:to-transparent">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Clientes</span>
@@ -490,14 +490,14 @@ export default function Dashboard({
                 <Users size={18} />
               </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-white/60 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <span className="font-bold text-slate-600">{totalClientesActivos} Activos</span>
               <span className="font-mono text-slate-500 font-bold">MRR: {formatCurrency(totalFacturacionMensualActiva)}</span>
             </div>
           </div>
 
           {/* KPI 3: PROSPECTOS (Secondary Sky Blue Theme) */}
-          <div className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(14,165,233,0.03)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:bg-white/65 hover:border-sky-300/60 hover:shadow-[0_12px_40px_rgba(14,165,233,0.06)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-sky-400/50 before:to-transparent">
+          <div className="bg-white/85 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(14,165,233,0.05)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:scale-[1.02] hover:-translate-y-1 hover:border-sky-400/50 hover:shadow-[0_22px_45px_rgba(14,165,233,0.12)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-sky-400 before:to-transparent">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="text-[11px] font-bold text-sky-500 uppercase tracking-widest block">Prospectos</span>
@@ -509,14 +509,14 @@ export default function Dashboard({
                 <Layers size={18} />
               </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-white/60 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <span className="font-bold text-sky-600">{prospectosActivosPipeline.length} En Pipeline</span>
               <span className="font-mono text-slate-500 font-bold">Potencial: {formatCurrency(pipelineEstimadoValue)}</span>
             </div>
           </div>
 
           {/* KPI 4: RENOVACIONES (Tertiary Pink Theme) */}
-          <div className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(255,92,227,0.03)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:bg-white/65 hover:border-pink-300/60 hover:shadow-[0_12px_40px_rgba(255,92,227,0.06)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-pink-400/50 before:to-transparent">
+          <div className="bg-white/85 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(255,92,227,0.05)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:scale-[1.02] hover:-translate-y-1 hover:border-pink-400/50 hover:shadow-[0_22px_45px_rgba(255,92,227,0.12)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-pink-400 before:to-transparent">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="text-[11px] font-bold text-pink-500 uppercase tracking-widest block">Renovaciones</span>
@@ -528,14 +528,14 @@ export default function Dashboard({
                 <Calendar size={18} />
               </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-white/60 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <span className="font-bold text-slate-600">{filteredRenovaciones.length} Registros</span>
               <span className="text-pink-500 font-mono font-bold">{renovacionesEstado.pendientes} Pendientes</span>
             </div>
           </div>
 
           {/* KPI 5: TAREAS (Indigo/Violet Theme) */}
-          <div className="bg-white/45 backdrop-blur-md p-5 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(99,102,241,0.03)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:bg-white/65 hover:border-indigo-300/60 hover:shadow-[0_12px_40px_rgba(99,102,241,0.06)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-indigo-400/50 before:to-transparent">
+          <div className="bg-white/85 backdrop-blur-xl p-5 rounded-3xl border border-white/95 shadow-[0_15px_35px_rgba(99,102,241,0.05)] flex flex-col justify-between h-[155px] relative overflow-hidden group hover:scale-[1.02] hover:-translate-y-1 hover:border-indigo-400/50 hover:shadow-[0_22px_45px_rgba(99,102,241,0.12)] transition-all duration-300 before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-indigo-400 before:to-transparent">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest block">Tareas</span>
@@ -547,7 +547,7 @@ export default function Dashboard({
                 <CheckSquare size={18} />
               </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-white/60 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <span className="font-bold text-indigo-600">{tareasCompletadasCount} de {filteredTareas.length}</span>
               {tareasPrioridadAltaPendiente > 0 ? (
                 <span className="text-rose-500 font-bold flex items-center font-mono animate-pulse">
@@ -565,20 +565,20 @@ export default function Dashboard({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* LEFT COLUMN: TREND & REVENUE VS EXPENSES */}
-          <div className="lg:col-span-8 bg-white/45 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(148,163,184,0.06)] hover:bg-white/55 hover:border-white/80 transition-all duration-300 flex flex-col justify-between min-h-[380px]">
+          <div className="lg:col-span-8 bg-white/85 backdrop-blur-xl p-6 rounded-3xl border border-white/95 overflow-hidden shadow-[0_15px_35px_rgba(148,163,184,0.05)] hover:scale-[1.01] hover:shadow-[0_22px_45px_rgba(148,163,184,0.12)] transition-all duration-300 flex flex-col justify-between min-h-[380px]">
             <div>
-              <div className="flex items-center justify-between border-b border-slate-100/60 pb-4 mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white px-6 py-4 -mx-6 -mt-6 mb-5 border-b border-white/10 gap-3">
                 <div>
-                  <h3 className="text-base font-bold text-slate-800 font-display">Histórico de Flujo Mensual</h3>
-                  <p className="text-xs text-slate-400">Comparativa mensual de ingresos facturados vs gastos operacionales</p>
+                  <h3 className="text-base font-extrabold text-white font-display">Histórico de Flujo Mensual</h3>
+                  <p className="text-xs text-white/85">Comparativa mensual de ingresos facturados vs gastos operacionales</p>
                 </div>
-                <div className="flex items-center space-x-4 text-xs font-semibold">
-                  <span className="flex items-center text-slate-600">
-                    <span className="w-2.5 h-2.5 bg-[#2E5BFF] rounded-full mr-1.5 shadow-[0_0_8px_rgba(46,91,255,0.4)]" />
+                <div className="flex items-center space-x-4 text-xs font-semibold self-start sm:self-auto bg-white/15 px-3 py-1.5 rounded-xl border border-white/10">
+                  <span className="flex items-center text-white">
+                    <span className="w-2.5 h-2.5 bg-[#2E5BFF] rounded-full mr-1.5 shadow-[0_0_8px_rgba(46,91,255,0.4)] border border-white/25" />
                     Ventas
                   </span>
-                  <span className="flex items-center text-slate-600">
-                    <span className="w-2.5 h-2.5 bg-rose-400 rounded-full mr-1.5 shadow-[0_0_8px_rgba(251,113,133,0.4)]" />
+                  <span className="flex items-center text-white">
+                    <span className="w-2.5 h-2.5 bg-rose-400 rounded-full mr-1.5 shadow-[0_0_8px_rgba(251,113,133,0.4)] border border-white/25" />
                     Gastos
                   </span>
                 </div>
@@ -674,14 +674,14 @@ export default function Dashboard({
           </div>
 
           {/* RIGHT COLUMN: DISTRIBUTION OF SERVICES (Ventas por Servicio) */}
-          <div className="lg:col-span-4 bg-white/45 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(148,163,184,0.06)] hover:bg-white/55 hover:border-white/80 transition-all duration-300 flex flex-col justify-between min-h-[380px]">
+          <div className="lg:col-span-4 bg-white/85 backdrop-blur-xl p-6 rounded-3xl border border-white/95 overflow-hidden shadow-[0_15px_35px_rgba(148,163,184,0.05)] hover:scale-[1.01] hover:shadow-[0_22px_45px_rgba(148,163,184,0.12)] transition-all duration-300 flex flex-col justify-between min-h-[380px]">
             <div>
-              <div className="flex items-center justify-between border-b border-slate-100/60 pb-4 mb-4">
+              <div className="flex items-center justify-between bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white px-6 py-4 -mx-6 -mt-6 mb-5 border-b border-white/10">
                 <div>
-                  <h3 className="text-base font-bold text-slate-800 font-display">Servicios más Vendidos</h3>
-                  <p className="text-xs text-slate-400">Distribución de ingresos por tipo de servicio</p>
+                  <h3 className="text-base font-extrabold text-white font-display">Servicios más Vendidos</h3>
+                  <p className="text-xs text-white/85">Distribución de ingresos por tipo de servicio</p>
                 </div>
-                <Percent size={16} className="text-slate-400" />
+                <Percent size={16} className="text-white/80" />
               </div>
 
               {ventasPorServicio.length === 0 ? (
@@ -750,14 +750,14 @@ export default function Dashboard({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* 1. EMBUDO DE PROSPECTOS / LEADS PIPELINE */}
-          <div className="lg:col-span-4 bg-white/45 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(148,163,184,0.06)] hover:bg-white/55 hover:border-white/80 transition-all duration-300 flex flex-col justify-between">
+          <div className="lg:col-span-4 bg-white/85 backdrop-blur-xl p-6 rounded-3xl border border-white/95 overflow-hidden shadow-[0_15px_35px_rgba(148,163,184,0.05)] hover:scale-[1.01] hover:shadow-[0_22px_45px_rgba(148,163,184,0.12)] transition-all duration-300 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between border-b border-slate-100/60 pb-4 mb-4">
+              <div className="flex items-center justify-between bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white px-6 py-4 -mx-6 -mt-6 mb-5 border-b border-white/10">
                 <div>
-                  <h3 className="text-base font-bold text-slate-800 font-display">Embudo de Prospectos</h3>
-                  <p className="text-xs text-slate-400">Estados de leads en conversión</p>
+                  <h3 className="text-base font-extrabold text-white font-display">Embudo de Prospectos</h3>
+                  <p className="text-xs text-white/85">Estados de leads en conversión</p>
                 </div>
-                <PieChart size={16} className="text-slate-400" />
+                <PieChart size={16} className="text-white/80" />
               </div>
 
               <div className="space-y-3 py-1">
@@ -768,17 +768,17 @@ export default function Dashboard({
                   
                   // Gorgeous glowing glassy cards for stages
                   const funnelColors = [
-                    'bg-slate-50/70 border-slate-200/50 text-slate-700',
-                    'bg-indigo-50/70 border-indigo-200/40 text-indigo-700 shadow-sm shadow-indigo-500/5',
-                    'bg-amber-50/70 border-amber-200/40 text-amber-700 shadow-sm shadow-amber-500/5',
-                    'bg-violet-50/70 border-violet-200/40 text-violet-700 shadow-sm shadow-violet-500/5',
-                    'bg-blue-50/70 border-blue-200/40 text-[#2E5BFF] shadow-sm shadow-[#2E5BFF]/5'
+                    'bg-slate-50/70 border-slate-200/50 text-slate-700 hover:border-slate-300',
+                    'bg-indigo-50/70 border-indigo-200/40 text-indigo-700 shadow-sm shadow-indigo-500/5 hover:border-indigo-300',
+                    'bg-amber-50/70 border-amber-200/40 text-amber-700 shadow-sm shadow-amber-500/5 hover:border-amber-300',
+                    'bg-violet-50/70 border-violet-200/40 text-violet-700 shadow-sm shadow-violet-500/5 hover:border-violet-300',
+                    'bg-blue-50/70 border-blue-200/40 text-[#2E5BFF] shadow-sm shadow-[#2E5BFF]/5 hover:border-blue-300'
                   ];
 
                   return (
                     <div 
                       key={estadoName}
-                      className={`flex items-center justify-between p-2.5 rounded-xl border backdrop-blur-sm transition-all duration-200 hover:translate-x-1 ${funnelColors[idx % funnelColors.length]} text-xs font-semibold`}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border backdrop-blur-sm transition-all duration-200 hover:translate-x-1 hover:shadow-sm ${funnelColors[idx % funnelColors.length]} text-xs font-semibold`}
                     >
                       <div className="flex items-center space-x-2">
                         <span className="w-5 h-5 rounded-lg bg-white/90 shadow-sm flex items-center justify-center font-bold text-[10px] text-slate-700 border border-slate-200/30">
@@ -796,7 +796,7 @@ export default function Dashboard({
                 })}
               </div>
             </div>
-            <div className="pt-4 mt-4 border-t border-slate-100/60 flex items-center justify-between text-xs text-slate-400 font-mono font-semibold">
+            <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-mono font-semibold">
               <span>Conversión total:</span>
               <span className="text-[#2E5BFF] font-bold">
                 {Math.round(
@@ -807,14 +807,14 @@ export default function Dashboard({
           </div>
 
           {/* 2. PROXIMAS RENOVACIONES ALERTS */}
-          <div className="lg:col-span-4 bg-white/45 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(148,163,184,0.06)] hover:bg-white/55 hover:border-white/80 transition-all duration-300 flex flex-col justify-between">
+          <div className="lg:col-span-4 bg-white/85 backdrop-blur-xl p-6 rounded-3xl border border-white/95 overflow-hidden shadow-[0_15px_35px_rgba(148,163,184,0.05)] hover:scale-[1.01] hover:shadow-[0_22px_45px_rgba(148,163,184,0.12)] transition-all duration-300 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between border-b border-slate-100/60 pb-4 mb-4">
+              <div className="flex items-center justify-between bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white px-6 py-4 -mx-6 -mt-6 mb-5 border-b border-white/10">
                 <div>
-                  <h3 className="text-base font-bold text-slate-800 font-display">Próximas Renovaciones</h3>
-                  <p className="text-xs text-slate-400">Contratos pendientes de renovación</p>
+                  <h3 className="text-base font-extrabold text-white font-display">Próximas Renovaciones</h3>
+                  <p className="text-xs text-white/85">Contratos pendientes de renovación</p>
                 </div>
-                <Clock size={16} className="text-slate-400" />
+                <Clock size={16} className="text-white/80" />
               </div>
 
               {filteredRenovaciones.filter(r => r.estado === 'Pendiente').length === 0 ? (
@@ -835,7 +835,7 @@ export default function Dashboard({
                     .map(ren => (
                       <div 
                         key={ren.id}
-                        className="p-3 bg-white/50 backdrop-blur-sm rounded-2xl border border-white/70 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:bg-white/80 hover:scale-[1.01] transition-all duration-200 flex flex-col justify-between space-y-1.5"
+                        className="p-3 bg-white/50 backdrop-blur-sm rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:bg-white/85 hover:scale-[1.02] hover:shadow-md hover:border-blue-200/40 transition-all duration-200 flex flex-col justify-between space-y-1.5"
                       >
                         <div className="flex justify-between items-start">
                           <span className="font-bold text-xs text-slate-800 truncate max-w-[170px]" title={ren.cliente}>
@@ -854,20 +854,20 @@ export default function Dashboard({
                 </div>
               )}
             </div>
-            <div className="pt-4 border-t border-slate-100/60 text-center text-xs text-slate-400 font-mono font-semibold">
+            <div className="pt-4 border-t border-slate-100 text-center text-xs text-slate-400 font-mono font-semibold">
               {filteredRenovaciones.filter(r => r.estado === 'Pendiente').length} renovación(es) pendientes en total
             </div>
           </div>
 
           {/* 3. TAREAS URGENTES PENDIENTES */}
-          <div className="lg:col-span-4 bg-white/45 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(148,163,184,0.06)] hover:bg-white/55 hover:border-white/80 transition-all duration-300 flex flex-col justify-between">
+          <div className="lg:col-span-4 bg-white/85 backdrop-blur-xl p-6 rounded-3xl border border-white/95 overflow-hidden shadow-[0_15px_35px_rgba(148,163,184,0.05)] hover:scale-[1.01] hover:shadow-[0_22px_45px_rgba(148,163,184,0.12)] transition-all duration-300 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between border-b border-slate-100/60 pb-4 mb-4">
+              <div className="flex items-center justify-between bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white px-6 py-4 -mx-6 -mt-6 mb-5 border-b border-white/10">
                 <div>
-                  <h3 className="text-base font-bold text-slate-800 font-display">Tareas Críticas</h3>
-                  <p className="text-xs text-slate-400">Próximas tareas de prioridad Alta o Media</p>
+                  <h3 className="text-base font-extrabold text-white font-display">Tareas Críticas</h3>
+                  <p className="text-xs text-white/85">Próximas tareas de prioridad Alta o Media</p>
                 </div>
-                <AlertTriangle size={16} className="text-slate-400" />
+                <AlertTriangle size={16} className="text-white/80" />
               </div>
 
               {filteredTareas.filter(t => t.estado !== 'Completada').length === 0 ? (
@@ -893,7 +893,7 @@ export default function Dashboard({
                     .map(t => (
                       <div 
                         key={t.id}
-                        className="p-3 bg-white/50 backdrop-blur-sm rounded-2xl border border-white/70 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:bg-white/80 hover:scale-[1.01] transition-all duration-200 flex flex-col justify-between space-y-1.5"
+                        className="p-3 bg-white/50 backdrop-blur-sm rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:bg-white/85 hover:scale-[1.02] hover:shadow-md hover:border-blue-200/40 transition-all duration-200 flex flex-col justify-between space-y-1.5"
                       >
                         <div className="flex justify-between items-start">
                           <span className="font-bold text-xs text-slate-800 truncate max-w-[160px]" title={t.titulo}>
@@ -918,7 +918,7 @@ export default function Dashboard({
                 </div>
               )}
             </div>
-            <div className="pt-4 border-t border-slate-100/60 text-center text-xs text-slate-400 font-mono font-semibold">
+            <div className="pt-4 border-t border-slate-100 text-center text-xs text-slate-400 font-mono font-semibold">
               {filteredTareas.filter(t => t.estado !== 'Completada').length} tareas pendientes en total
             </div>
           </div>
