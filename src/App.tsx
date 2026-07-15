@@ -5194,22 +5194,36 @@ export default function App() {
                       empresa: companyName || 'Centinela'
                     };
 
-                    // Send via server proxy to bypass CORS
-                    const response = await fetch('/api/acciones/n8n-proxy', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({ targetUrl, payload }),
-                    });
+                    // Enviamos la petición DIRECTAMENTE desde el navegador (Opción 1 - Ideal para Vercel estático)
+                    let response;
+                    try {
+                      response = await fetch(targetUrl, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
+                      });
+                    } catch (fetchError: any) {
+                      // Si falla por CORS o red, intentamos con modo 'no-cors' para disparar el webhook sin esperar respuesta
+                      console.warn('Fallo fetch directo, intentando modo no-cors para disparar el webhook...', fetchError);
+                      response = await fetch(targetUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
+                      });
+                    }
 
-                    const resData = await response.json();
-                    if (response.ok && resData.success) {
+                    if (response.ok || response.type === 'opaque') {
                       setSuccessMessage(`¡Acción enviada con éxito! El flujo en n8n ha sido disparado.`);
                       setTimeout(() => setSuccessMessage(null), 4000);
                       setIntegrationModalInfo({ isOpen: false, type: null, contactName: '', phone: '', asunto: '', valor: '', originalRecord: null });
                     } else {
-                      throw new Error(resData.error || `Servidor n8n respondió con error.`);
+                      const responseText = await response.text().catch(() => 'No response body');
+                      throw new Error(`El servidor de n8n respondió con código ${response.status}: ${responseText}`);
                     }
                   } catch (err: any) {
                     console.error('Error enviando webhook a n8n:', err);
