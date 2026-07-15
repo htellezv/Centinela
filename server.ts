@@ -420,6 +420,45 @@ app.post("/api/acciones/reunion", validateApiKey, (req, res) => {
   });
 });
 
+// Proxy to forward webhook requests to n8n to completely bypass browser CORS limitations
+app.post("/api/acciones/n8n-proxy", async (req, res) => {
+  const { targetUrl, payload } = req.body;
+  if (!targetUrl) {
+    return res.status(400).json({ success: false, error: "targetUrl es requerido para realizar el reenvío" });
+  }
+
+  try {
+    const response = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const status = response.status;
+    let data;
+    const responseText = await response.text();
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = responseText;
+    }
+
+    res.status(status).json({
+      success: response.ok,
+      status,
+      data
+    });
+  } catch (err: any) {
+    console.error("Error proxying to n8n webhook:", err);
+    res.status(500).json({
+      success: false,
+      error: `Error de red al conectar con n8n: ${err.message}`
+    });
+  }
+});
+
 // API Endpoints - SYNCHRONIZATION
 // This endpoint receives the full lists from the client and merges them.
 // Client state takes priority unless an item on the server has "isNewFromApi" or "isUpdatedFromApi".

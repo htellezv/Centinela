@@ -141,7 +141,26 @@ export default function App() {
   const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(localStorage.getItem('centinela_last_sync_time'));
   const [apiConfigKey, setApiConfigKey] = useState<string>('');
 
-  const [integrationModalInfo, setIntegrationModalInfo] = useState<{ isOpen: boolean; type: 'llamada' | 'whatsapp' | null; contactName?: string }>({ isOpen: false, type: null });
+  const [integrationModalInfo, setIntegrationModalInfo] = useState<{ 
+    isOpen: boolean; 
+    type: 'llamada' | 'whatsapp' | null; 
+    contactName: string;
+    phone: string;
+    asunto: string;
+    valor: string;
+    originalRecord: any;
+  }>({ 
+    isOpen: false, 
+    type: null,
+    contactName: '',
+    phone: '',
+    asunto: '',
+    valor: '',
+    originalRecord: null
+  });
+  const [n8nLlamadaWebhookUrl, setN8nLlamadaWebhookUrl] = useState<string>(() => localStorage.getItem('centinela_n8n_llamada_webhook') || '');
+  const [n8nWhatsappWebhookUrl, setN8nWhatsappWebhookUrl] = useState<string>(() => localStorage.getItem('centinela_n8n_whatsapp_webhook') || '');
+  const [isSendingIntegration, setIsSendingIntegration] = useState(false);
   const [apiDocResource, setApiDocResource] = useState<'clientes' | 'prospectos' | 'ventas' | 'gastos' | 'renovaciones' | 'tareas' | 'acciones'>('clientes');
   const [apiDocMethod, setApiDocMethod] = useState<'GET' | 'POST'>('GET');
 
@@ -2709,7 +2728,11 @@ export default function App() {
                                     setIntegrationModalInfo({ 
                                       isOpen: true, 
                                       type: 'llamada', 
-                                      contactName: cliente.contacto || cliente.empresa 
+                                      contactName: cliente.contacto || cliente.empresa,
+                                      phone: cliente.telefono || '',
+                                      asunto: `Llamada de seguimiento sobre ${cliente.servicio || 'el servicio contratado'}`,
+                                      valor: cliente.valor || '0',
+                                      originalRecord: cliente
                                     });
                                   }}
                                   className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -2723,7 +2746,11 @@ export default function App() {
                                     setIntegrationModalInfo({ 
                                       isOpen: true, 
                                       type: 'whatsapp', 
-                                      contactName: cliente.contacto || cliente.empresa 
+                                      contactName: cliente.contacto || cliente.empresa,
+                                      phone: cliente.telefono || '',
+                                      asunto: `Estimado/a ${cliente.contacto || cliente.empresa}, le saludamos de ${companyName || 'Centinela'} para informarle que su servicio de ${cliente.servicio || 'Servicios contratados'} se encuentra activo y al día. ¡Gracias por confiar en nosotros!`,
+                                      valor: cliente.valor || '0',
+                                      originalRecord: cliente
                                     });
                                   }}
                                   className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
@@ -3059,7 +3086,11 @@ export default function App() {
                                     setIntegrationModalInfo({ 
                                       isOpen: true, 
                                       type: 'llamada', 
-                                      contactName: p.contacto || p.empresa 
+                                      contactName: p.contacto || p.empresa,
+                                      phone: p.telefono || '',
+                                      asunto: `Primer contacto comercial sobre ${p.servicioInteres || 'interés en servicios'}`,
+                                      valor: p.valorEstimado || '0',
+                                      originalRecord: p
                                     });
                                   }}
                                   className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -3073,7 +3104,11 @@ export default function App() {
                                     setIntegrationModalInfo({ 
                                       isOpen: true, 
                                       type: 'whatsapp', 
-                                      contactName: p.contacto || p.empresa 
+                                      contactName: p.contacto || p.empresa,
+                                      phone: p.telefono || '',
+                                      asunto: `Hola ${p.contacto || p.empresa}, un gusto saludarte. Vemos que tienes interés en nuestro servicio de ${p.servicioInteres || 'servicios de interés'}. ¿Cuándo te quedaría bien que agendemos una breve llamada de 5 minutos?`,
+                                      valor: p.valorEstimado || '0',
+                                      originalRecord: p
                                     });
                                   }}
                                   className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
@@ -3640,10 +3675,15 @@ export default function App() {
                                   <button
                                     type="button"
                                     onClick={() => {
+                                      const rowPhone = matchingCliente?.telefono || matchingProspecto?.telefono || '';
                                       setIntegrationModalInfo({ 
                                         isOpen: true, 
                                         type: 'llamada', 
-                                        contactName: r.cliente 
+                                        contactName: r.cliente,
+                                        phone: rowPhone,
+                                        asunto: `Recordatorio de renovación inminente para ${r.servicio || 'su plan'}`,
+                                        valor: r.valor || '0',
+                                        originalRecord: r
                                       });
                                     }}
                                     className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -3654,10 +3694,16 @@ export default function App() {
                                   <button
                                     type="button"
                                     onClick={() => {
+                                      const rowPhone = matchingCliente?.telefono || matchingProspecto?.telefono || '';
+                                      const formattedVal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(r.valor) || 0);
                                       setIntegrationModalInfo({ 
                                         isOpen: true, 
                                         type: 'whatsapp', 
-                                        contactName: r.cliente 
+                                        contactName: r.cliente,
+                                        phone: rowPhone,
+                                        asunto: `Hola ${r.cliente}, te escribimos para recordarte que tu servicio de ${r.servicio} por valor de ${formattedVal} tiene su fecha de renovación el próximo ${r.fechaRenovacion}.`,
+                                        valor: r.valor || '0',
+                                        originalRecord: r
                                       });
                                     }}
                                     className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
@@ -4947,11 +4993,11 @@ export default function App() {
         </div>
       </main>
 
-      {/* Subtle Integrations Alert Modal */}
+      {/* Integrations Modal with Form */}
       {integrationModalInfo.isOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in p-4">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in p-4 overflow-y-auto">
           <div 
-            className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 relative scale-in space-y-4"
+            className="bg-white rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-slate-100 relative scale-in space-y-4 my-8"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
@@ -4966,64 +5012,233 @@ export default function App() {
                 <div>
                   <h3 className="text-base font-bold text-slate-800 leading-tight">
                     {integrationModalInfo.type === 'llamada' 
-                      ? 'Llamada de Agente IA' 
+                      ? 'Llamada de Agente de Voz IA' 
                       : 'Envío de Plantilla WhatsApp'}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                    Integración Automática vía n8n
+                    Preparación de Acción vía n8n
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setIntegrationModalInfo({ isOpen: false, type: null })}
+                onClick={() => setIntegrationModalInfo({ isOpen: false, type: null, contactName: '', phone: '', asunto: '', valor: '', originalRecord: null })}
                 className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 p-1.5 rounded-lg transition-all"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div className="space-y-3">
-              <div className="bg-slate-50 border border-slate-100/80 rounded-2xl p-4 text-xs text-slate-600 leading-relaxed space-y-2">
-                <p>
-                  Has hecho clic en la acción automatizada para <strong>{integrationModalInfo.contactName || 'este contacto'}</strong>.
-                </p>
+            {/* Editable Fields Form */}
+            <div className="space-y-4 text-left">
+              {/* Persona / Contact Name */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {integrationModalInfo.type === 'llamada' ? 'Persona a la que se va a llamar' : 'Persona a la que se enviará WhatsApp'}
+                </label>
+                <input 
+                  type="text" 
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium focus:border-[#2E5BFF] focus:bg-white transition-all outline-none"
+                  value={integrationModalInfo.contactName}
+                  onChange={(e) => setIntegrationModalInfo({ ...integrationModalInfo, contactName: e.target.value })}
+                />
+              </div>
+
+              {/* Teléfono with Country Selector */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                  Teléfono (Debe incluir indicativo de país)
+                </label>
+                <div className="flex rounded-xl overflow-hidden border border-slate-200 focus-within:border-[#2E5BFF] transition-all bg-slate-50 focus-within:bg-white">
+                  <select 
+                    className="bg-slate-100/80 border-r border-slate-200 text-xs px-2 py-2.5 font-semibold text-slate-600 outline-none cursor-pointer max-w-[120px]"
+                    onChange={(e) => {
+                      const selectedPrefix = e.target.value;
+                      if (selectedPrefix) {
+                        // Strip existing plus or country codes to apply the new one cleanly
+                        let cleanPhone = integrationModalInfo.phone.replace(/^(\+00|\+?\d{1,4})/, '').trim();
+                        // Strip leading zeroes
+                        cleanPhone = cleanPhone.replace(/^0+/, '');
+                        setIntegrationModalInfo({
+                          ...integrationModalInfo,
+                          phone: selectedPrefix + cleanPhone
+                        });
+                      }
+                    }}
+                    defaultValue=""
+                  >
+                    <option value="" disabled>🌍 Indicativo</option>
+                    <option value="+57">🇨🇴 CO (+57)</option>
+                    <option value="+52">🇲🇽 MX (+52)</option>
+                    <option value="+34">🇪🇸 ES (+34)</option>
+                    <option value="+1">🇺🇸 US (+1)</option>
+                    <option value="+58">🇻🇪 VE (+58)</option>
+                    <option value="+593">🇪🇨 EC (+593)</option>
+                    <option value="+51">🇵🇪 PE (+51)</option>
+                    <option value="+56">🇨🇱 CL (+56)</option>
+                    <option value="+54">🇦🇷 AR (+54)</option>
+                    <option value="+507">🇵🇦 PA (+507)</option>
+                    <option value="+506">🇨🇷 CR (+506)</option>
+                    <option value="+1">🇩🇴 DO (+1)</option>
+                  </select>
+                  <input 
+                    type="text" 
+                    className="flex-1 px-3.5 py-2.5 text-sm bg-transparent outline-none font-medium text-slate-800" 
+                    placeholder="Ej: +57 300 123 4567"
+                    value={integrationModalInfo.phone}
+                    onChange={(e) => setIntegrationModalInfo({ ...integrationModalInfo, phone: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Asunto o Mensaje/Plantilla */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {integrationModalInfo.type === 'llamada' ? 'Asunto / Propósito de la llamada' : 'Mensaje / Plantilla a enviar'}
+                </label>
                 {integrationModalInfo.type === 'llamada' ? (
-                  <p>
-                    Esta función prepara una <strong>Llamada Telefónica Automática con un Agente de Voz IA</strong> que puede conversar de forma natural, calificar al contacto y registrar el resultado de forma autónoma en Google Sheets.
-                  </p>
+                  <input 
+                    type="text" 
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium focus:border-[#2E5BFF] focus:bg-white transition-all outline-none"
+                    value={integrationModalInfo.asunto}
+                    onChange={(e) => setIntegrationModalInfo({ ...integrationModalInfo, asunto: e.target.value })}
+                  />
                 ) : (
-                  <p>
-                    Esta función automatiza el <strong>Envío de una Plantilla de WhatsApp Pre-aprobada</strong> (como notificaciones de cobranza, bienvenida o recordatorios de citas) a través de proveedores conectados.
-                  </p>
+                  <textarea 
+                    rows={3}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium focus:border-[#2E5BFF] focus:bg-white transition-all outline-none resize-none"
+                    value={integrationModalInfo.asunto}
+                    onChange={(e) => setIntegrationModalInfo({ ...integrationModalInfo, asunto: e.target.value })}
+                  />
                 )}
-                <p className="text-slate-400 text-[11px] border-t border-slate-100 pt-2 font-medium">
-                  💡 Para activar y conectar estos botones a tus propios webhooks de n8n, puedes consultar nuestra documentación o contactar directamente al equipo de <strong>empresariopuntocom</strong> para una llave y flujo listo para usar.
+              </div>
+
+              {/* Valor */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Valor
+                </label>
+                <input 
+                  type="text" 
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-medium focus:border-[#2E5BFF] focus:bg-white transition-all outline-none"
+                  value={integrationModalInfo.valor}
+                  onChange={(e) => setIntegrationModalInfo({ ...integrationModalInfo, valor: e.target.value })}
+                />
+              </div>
+
+              {/* n8n Webhook URL input */}
+              <div className="space-y-1 pt-1 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center space-x-1.5">
+                    <Cpu size={12} className="text-blue-500" />
+                    <span>URL del Webhook de n8n</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-medium">(Se guarda localmente)</span>
+                </div>
+                <input 
+                  type="text" 
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-700 focus:border-[#2E5BFF] focus:bg-white transition-all outline-none"
+                  placeholder={integrationModalInfo.type === 'llamada' ? "https://tu-n8n.com/webhook/llamada" : "https://tu-n8n.com/webhook/whatsapp"}
+                  value={integrationModalInfo.type === 'llamada' ? n8nLlamadaWebhookUrl : n8nWhatsappWebhookUrl}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (integrationModalInfo.type === 'llamada') {
+                      setN8nLlamadaWebhookUrl(val);
+                      localStorage.setItem('centinela_n8n_llamada_webhook', val);
+                    } else {
+                      setN8nWhatsappWebhookUrl(val);
+                      localStorage.setItem('centinela_n8n_whatsapp_webhook', val);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Sutil reminder notice */}
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3.5 text-xs text-slate-500 leading-relaxed space-y-1">
+                <p className="font-semibold text-slate-700">💡 Automatización Profesional n8n</p>
+                <p>
+                  Para conectar estos disparadores a tu propia telefonía de agentes de voz IA (como Twilio/Vapi) o canales de WhatsApp API, puedes configurar tus webhooks arriba, consumir nuestra <strong>API de Centinela</strong>, o contactar a <a href="https://www.empresarioenlinea.com/" target="_blank" rel="noreferrer" className="text-[#2E5BFF] font-bold hover:underline">empresarioenlinea.com</a> para adquirir un flujo automatizado listo para usar.
                 </p>
               </div>
             </div>
 
-            <div className="flex space-x-2 pt-2">
+            {/* Confirmation & Cancel Buttons */}
+            <div className="flex space-x-2.5 pt-2">
               <button
                 type="button"
-                onClick={() => {
-                  setIntegrationModalInfo({ isOpen: false, type: null });
-                  setActiveModule('api-n8n');
-                }}
+                onClick={() => setIntegrationModalInfo({ isOpen: false, type: null, contactName: '', phone: '', asunto: '', valor: '', originalRecord: null })}
                 className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl transition-all"
+                disabled={isSendingIntegration}
               >
-                Ver Documentación API
+                Cancelar
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setIntegrationModalInfo({ isOpen: false, type: null });
-                  window.open("https://empresario.com.co", "_blank");
+                onClick={async () => {
+                  const targetUrl = integrationModalInfo.type === 'llamada' ? n8nLlamadaWebhookUrl : n8nWhatsappWebhookUrl;
+                  if (!targetUrl || !targetUrl.trim()) {
+                    alert('Por favor, ingresa la URL de tu webhook de n8n para continuar.');
+                    return;
+                  }
+
+                  setIsSendingIntegration(true);
+                  try {
+                    const payload = {
+                      tipo: integrationModalInfo.type,
+                      contacto: integrationModalInfo.contactName,
+                      telefono: integrationModalInfo.phone,
+                      asunto_mensaje: integrationModalInfo.asunto,
+                      valor: integrationModalInfo.valor,
+                      fecha_solicitud: new Date().toISOString(),
+                      origen_registro: integrationModalInfo.originalRecord,
+                      empresa: companyName || 'Centinela'
+                    };
+
+                    // Send via server proxy to bypass CORS
+                    const response = await fetch('/api/acciones/n8n-proxy', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ targetUrl, payload }),
+                    });
+
+                    const resData = await response.json();
+                    if (response.ok && resData.success) {
+                      setSuccessMessage(`¡Acción enviada con éxito! El flujo en n8n ha sido disparado.`);
+                      setTimeout(() => setSuccessMessage(null), 4000);
+                      setIntegrationModalInfo({ isOpen: false, type: null, contactName: '', phone: '', asunto: '', valor: '', originalRecord: null });
+                    } else {
+                      throw new Error(resData.error || `Servidor n8n respondió con error.`);
+                    }
+                  } catch (err: any) {
+                    console.error('Error enviando webhook a n8n:', err);
+                    alert(`Ocurrió un error al enviar el webhook a n8n:\n${err.message || err}\n\nVerifica que tu URL de webhook esté activa y configurada.`);
+                  } finally {
+                    setIsSendingIntegration(false);
+                  }
                 }}
-                className="flex-1 py-2.5 px-4 bg-slate-900 text-white hover:bg-slate-800 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-1"
+                className={`flex-1 py-2.5 px-4 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-1.5 text-white ${
+                  integrationModalInfo.type === 'llamada'
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-emerald-600 hover:bg-emerald-700'
+                }`}
+                disabled={isSendingIntegration}
               >
-                <span>Contactar</span>
-                <ExternalLink size={12} />
+                {isSendingIntegration ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Enviando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Confirmar {integrationModalInfo.type === 'llamada' ? 'Llamada' : 'WhatsApp'}</span>
+                    <ExternalLink size={12} />
+                  </>
+                )}
               </button>
             </div>
           </div>
