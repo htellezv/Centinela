@@ -106,7 +106,10 @@ import {
   Mail,
   Video,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Cpu,
+  Phone,
+  MessageCircle
 } from 'lucide-react';
 import ClienteForm from './components/ClienteForm';
 import ProspectoForm from './components/ProspectoForm';
@@ -133,7 +136,27 @@ export default function App() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Active module
-  const [activeModule, setActiveModule] = useState<'dashboard' | 'clientes' | 'prospectos' | 'ventas' | 'gastos' | 'renovaciones' | 'tareas'>('dashboard');
+  const [activeModule, setActiveModule] = useState<'dashboard' | 'clientes' | 'prospectos' | 'ventas' | 'gastos' | 'renovaciones' | 'tareas' | 'api-n8n'>('dashboard');
+  const [isSyncingWithApi, setIsSyncingWithApi] = useState(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(localStorage.getItem('centinela_last_sync_time'));
+  const [apiConfigKey, setApiConfigKey] = useState<string>('');
+
+  const [integrationModalInfo, setIntegrationModalInfo] = useState<{ isOpen: boolean; type: 'llamada' | 'whatsapp' | null; contactName?: string }>({ isOpen: false, type: null });
+  const [apiDocResource, setApiDocResource] = useState<'clientes' | 'prospectos' | 'ventas' | 'gastos' | 'renovaciones' | 'tareas' | 'acciones'>('clientes');
+  const [apiDocMethod, setApiDocMethod] = useState<'GET' | 'POST'>('GET');
+
+  useEffect(() => {
+    if (activeModule === 'api-n8n') {
+      fetch('/api/internal/config')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setApiConfigKey(data.apiKey);
+          }
+        })
+        .catch(err => console.error("Error fetching internal api key config:", err));
+    }
+  }, [activeModule]);
 
   // Sheets state - Clientes
   const [spreadsheetId, setSpreadsheetId] = useState<string | null>(null);
@@ -346,11 +369,12 @@ export default function App() {
     try {
       // 1. Load Clientes
       const sheetFile = await searchSpreadsheet(accessToken);
+      let listClientes: Cliente[] = [];
       if (sheetFile) {
         setSpreadsheetId(sheetFile.id);
         setSpreadsheetName(sheetFile.name);
-        const list = await getClientes(accessToken, sheetFile.id);
-        setClientes(list);
+        listClientes = await getClientes(accessToken, sheetFile.id);
+        setClientes(listClientes);
       } else {
         setSpreadsheetId(null);
         setSpreadsheetName('');
@@ -359,11 +383,12 @@ export default function App() {
 
       // 2. Load Prospectos
       const prosFile = await searchProspectosSpreadsheet(accessToken);
+      let listProspectos: Prospecto[] = [];
       if (prosFile) {
         setProspectosSpreadsheetId(prosFile.id);
         setProspectosSpreadsheetName(prosFile.name);
-        const list = await getProspectos(accessToken, prosFile.id);
-        setProspectos(list);
+        listProspectos = await getProspectos(accessToken, prosFile.id);
+        setProspectos(listProspectos);
       } else {
         setProspectosSpreadsheetId(null);
         setProspectosSpreadsheetName('');
@@ -372,11 +397,12 @@ export default function App() {
 
       // 3. Load Ventas
       const ventasFile = await searchVentasSpreadsheet(accessToken);
+      let listVentas: Venta[] = [];
       if (ventasFile) {
         setVentasSpreadsheetId(ventasFile.id);
         setVentasSpreadsheetName(ventasFile.name);
-        const list = await getVentas(accessToken, ventasFile.id);
-        setVentas(list);
+        listVentas = await getVentas(accessToken, ventasFile.id);
+        setVentas(listVentas);
       } else {
         setVentasSpreadsheetId(null);
         setVentasSpreadsheetName('');
@@ -385,11 +411,12 @@ export default function App() {
 
       // 4. Load Gastos
       const gastosFile = await searchGastosSpreadsheet(accessToken);
+      let listGastos: Gasto[] = [];
       if (gastosFile) {
         setGastosSpreadsheetId(gastosFile.id);
         setGastosSpreadsheetName(gastosFile.name);
-        const list = await getGastos(accessToken, gastosFile.id);
-        setGastos(list);
+        listGastos = await getGastos(accessToken, gastosFile.id);
+        setGastos(listGastos);
       } else {
         setGastosSpreadsheetId(null);
         setGastosSpreadsheetName('');
@@ -398,11 +425,12 @@ export default function App() {
 
       // 5. Load Renovaciones
       const renovacionesFile = await searchRenovacionesSpreadsheet(accessToken);
+      let listRenovaciones: Renovacion[] = [];
       if (renovacionesFile) {
         setRenovacionesSpreadsheetId(renovacionesFile.id);
         setRenovacionesSpreadsheetName(renovacionesFile.name);
-        const list = await getRenovaciones(accessToken, renovacionesFile.id);
-        setRenovaciones(list);
+        listRenovaciones = await getRenovaciones(accessToken, renovacionesFile.id);
+        setRenovaciones(listRenovaciones);
       } else {
         setRenovacionesSpreadsheetId(null);
         setRenovacionesSpreadsheetName('');
@@ -411,21 +439,221 @@ export default function App() {
 
       // 6. Load Tareas
       const tareasFile = await searchTareasSpreadsheet(accessToken);
+      let listTareas: Tarea[] = [];
       if (tareasFile) {
         setTareasSpreadsheetId(tareasFile.id);
         setTareasSpreadsheetName(tareasFile.name);
-        const list = await getTareas(accessToken, tareasFile.id);
-        setTareas(list);
+        listTareas = await getTareas(accessToken, tareasFile.id);
+        setTareas(listTareas);
       } else {
         setTareasSpreadsheetId(null);
         setTareasSpreadsheetName('');
         setTareas([]);
       }
+
+      // Trigger automatic bidirectional sync with backend Express API cache (for n8n support)
+      await triggerSyncWithApi(
+        listClientes,
+        listProspectos,
+        listVentas,
+        listGastos,
+        listRenovaciones,
+        listTareas,
+        accessToken,
+        sheetFile?.id,
+        prosFile?.id,
+        ventasFile?.id,
+        gastosFile?.id,
+        renovacionesFile?.id,
+        tareasFile?.id
+      );
     } catch (err: any) {
       console.error(err);
       setError('No se pudo cargar la información de Google Sheets. Asegúrate de tener permisos o intenta reconectar.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Bidirectional Synchronization with Backend Express Server Database
+  const triggerSyncWithApi = async (
+    currentClientes: Cliente[],
+    currentProspectos: Prospecto[],
+    currentVentas: Venta[],
+    currentGastos: Gasto[],
+    currentRenovaciones: Renovacion[],
+    currentTareas: Tarea[],
+    accessToken: string,
+    sheetClientesId?: string | null,
+    sheetProspectosId?: string | null,
+    sheetVentasId?: string | null,
+    sheetGastosId?: string | null,
+    sheetRenovacionesId?: string | null,
+    sheetTareasId?: string | null
+  ) => {
+    setIsSyncingWithApi(true);
+    try {
+      // 1. Send all data to the backend for merging
+      const response = await fetch('/api/internal/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientes: currentClientes,
+          prospectos: currentProspectos,
+          ventas: currentVentas,
+          gastos: currentGastos,
+          renovaciones: currentRenovaciones,
+          tareas: currentTareas,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al sincronizar con el servidor.');
+      }
+
+      const syncResult = await response.json();
+      const serverDb = syncResult.data;
+
+      // Determine sheet IDs
+      const sClientesId = sheetClientesId || spreadsheetId;
+      const sProspectosId = sheetProspectosId || prospectosSpreadsheetId;
+      const sVentasId = sheetVentasId || ventasSpreadsheetId;
+      const sGastosId = sheetGastosId || gastosSpreadsheetId;
+      const sRenovacionesId = sheetRenovacionesId || renovacionesSpreadsheetId;
+      const sTareasId = sheetTareasId || tareasSpreadsheetId;
+
+      // 2. Detect and process "isNewFromApi" or "isUpdatedFromApi" items to write to Google Sheets
+      
+      // -- CLIENTES --
+      const clientesToSync = serverDb.clientes.filter((c: any) => c.isNewFromApi || c.isUpdatedFromApi);
+      if (clientesToSync.length > 0 && sClientesId) {
+        for (const item of clientesToSync) {
+          const { isNewFromApi, isUpdatedFromApi, ...cleanItem } = item;
+          if (item.isNewFromApi) {
+            await addCliente(accessToken, sClientesId, cleanItem);
+          } else {
+            await updateCliente(accessToken, sClientesId, cleanItem);
+          }
+        }
+        await fetch('/api/internal/sync/ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'clientes', ids: clientesToSync.map((c: any) => c.id) }),
+        });
+      }
+
+      // -- PROSPECTOS --
+      const prospectosToSync = serverDb.prospectos.filter((p: any) => p.isNewFromApi || p.isUpdatedFromApi);
+      if (prospectosToSync.length > 0 && sProspectosId) {
+        for (const item of prospectosToSync) {
+          const { isNewFromApi, isUpdatedFromApi, ...cleanItem } = item;
+          if (item.isNewFromApi) {
+            await addProspecto(accessToken, sProspectosId, cleanItem);
+          } else {
+            await updateProspecto(accessToken, sProspectosId, cleanItem);
+          }
+        }
+        await fetch('/api/internal/sync/ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'prospectos', ids: prospectosToSync.map((p: any) => p.id) }),
+        });
+      }
+
+      // -- VENTAS --
+      const ventasToSync = serverDb.ventas.filter((v: any) => v.isNewFromApi || v.isUpdatedFromApi);
+      if (ventasToSync.length > 0 && sVentasId) {
+        for (const item of ventasToSync) {
+          const { isNewFromApi, isUpdatedFromApi, ...cleanItem } = item;
+          if (item.isNewFromApi) {
+            await addVenta(accessToken, sVentasId, cleanItem);
+          } else {
+            await updateVenta(accessToken, sVentasId, cleanItem);
+          }
+        }
+        await fetch('/api/internal/sync/ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'ventas', ids: ventasToSync.map((v: any) => v.id) }),
+        });
+      }
+
+      // -- GASTOS --
+      const gastosToSync = serverDb.gastos?.filter((g: any) => g.isNewFromApi || g.isUpdatedFromApi) || [];
+      if (gastosToSync.length > 0 && sGastosId) {
+        for (const item of gastosToSync) {
+          const { isNewFromApi, isUpdatedFromApi, ...cleanItem } = item;
+          if (item.isNewFromApi) {
+            await addGasto(accessToken, sGastosId, cleanItem);
+          } else {
+            await updateGasto(accessToken, sGastosId, cleanItem);
+          }
+        }
+        await fetch('/api/internal/sync/ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'gastos', ids: gastosToSync.map((g: any) => g.id) }),
+        });
+      }
+
+      // -- RENOVACIONES --
+      const renovacionesToSync = serverDb.renovaciones?.filter((r: any) => r.isNewFromApi || r.isUpdatedFromApi) || [];
+      if (renovacionesToSync.length > 0 && sRenovacionesId) {
+        for (const item of renovacionesToSync) {
+          const { isNewFromApi, isUpdatedFromApi, ...cleanItem } = item;
+          if (item.isNewFromApi) {
+            await addRenovacion(accessToken, sRenovacionesId, cleanItem);
+          } else {
+            await updateRenovacion(accessToken, sRenovacionesId, cleanItem);
+          }
+        }
+        await fetch('/api/internal/sync/ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'renovaciones', ids: renovacionesToSync.map((r: any) => r.id) }),
+        });
+      }
+
+      // -- TAREAS --
+      const tareasToSync = serverDb.tareas.filter((t: any) => t.isNewFromApi || t.isUpdatedFromApi);
+      if (tareasToSync.length > 0 && sTareasId) {
+        for (const item of tareasToSync) {
+          const { isNewFromApi, isUpdatedFromApi, ...cleanItem } = item;
+          if (item.isNewFromApi) {
+            await addTarea(accessToken, sTareasId, cleanItem);
+          } else {
+            await updateTarea(accessToken, sTareasId, cleanItem);
+          }
+        }
+        await fetch('/api/internal/sync/ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'tareas', ids: tareasToSync.map((t: any) => t.id) }),
+        });
+      }
+
+      // 3. Update react states to match final synchronized sets
+      const cleanList = (list: any[] = []) => list.map(({ isNewFromApi, isUpdatedFromApi, ...rest }) => rest);
+
+      setClientes(cleanList(serverDb.clientes));
+      setProspectos(cleanList(serverDb.prospectos));
+      setVentas(cleanList(serverDb.ventas));
+      if (serverDb.gastos) setGastos(cleanList(serverDb.gastos));
+      if (serverDb.renovaciones) setRenovaciones(cleanList(serverDb.renovaciones));
+      setTareas(cleanList(serverDb.tareas));
+
+      const nowStr = new Date().toLocaleString('es-ES', { 
+        year: 'numeric', month: 'short', day: 'numeric', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+      });
+      setLastSyncedTime(nowStr);
+      localStorage.setItem('centinela_last_sync_time', nowStr);
+    } catch (error) {
+      console.error('Error during backend API sync:', error);
+    } finally {
+      setIsSyncingWithApi(false);
     }
   };
 
@@ -1572,6 +1800,23 @@ export default function App() {
             </div>
             {activeModule === 'tareas' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
           </button>
+
+          {/* API para n8n */}
+          <button
+            id="nav-api-n8n"
+            onClick={() => setActiveModule('api-n8n')}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
+              activeModule === 'api-n8n'
+                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Cpu size={18} className={activeModule === 'api-n8n' ? 'text-white' : 'text-white/60'} />
+              <span>API</span>
+            </div>
+            {activeModule === 'api-n8n' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+          </button>
         </nav>
 
         {/* Tarjeta Promocional: EmpresarioPuntoCom */}
@@ -1742,11 +1987,30 @@ export default function App() {
             </button>
 
             <h2 className="text-base sm:text-lg font-extrabold text-white font-display tracking-tight truncate">
-              {activeModule === 'dashboard' ? 'Dashboard' : activeModule === 'clientes' ? 'Clientes' : activeModule === 'prospectos' ? 'Prospectos' : activeModule === 'ventas' ? 'Ventas' : activeModule === 'renovaciones' ? 'Renovaciones' : activeModule === 'tareas' ? 'Tareas' : 'Gastos'}
+              {activeModule === 'dashboard' 
+                ? 'Dashboard' 
+                : activeModule === 'clientes' 
+                ? 'Clientes' 
+                : activeModule === 'prospectos' 
+                ? 'Prospectos' 
+                : activeModule === 'ventas' 
+                ? 'Ventas' 
+                : activeModule === 'renovaciones' 
+                ? 'Renovaciones' 
+                : activeModule === 'tareas' 
+                ? 'Tareas' 
+                : activeModule === 'api-n8n'
+                ? 'API'
+                : 'Gastos'}
             </h2>
             
             {/* Sheet sync status pill */}
-            {activeModule === 'dashboard' ? (
+            {activeModule === 'api-n8n' ? (
+              <span id="api-n8n-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 shadow-sm">
+                <Cpu size={13} className="text-[#00F5D4]" />
+                <span>API de Integración</span>
+              </span>
+            ) : activeModule === 'dashboard' ? (
               <span id="dashboard-sync-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 shadow-sm">
                 <Database size={13} className="text-[#00F5D4]" />
                 <span>Datos Combinados</span>
@@ -2411,15 +2675,14 @@ export default function App() {
                                   cliente.estado === 'Activo'
                                     ? 'bg-emerald-500'
                                     : cliente.estado === 'Inactivo'
-                                    ? 'bg-rose-500'
-                                    : 'bg-amber-500'
-                                }`} />
-                                {cliente.estado}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-center">
+                                                                    }`} />
+                                 {cliente.estado}
+                               </span>
+                             </td>
+                             <td className="py-3 px-4 text-center">
                               <div className="flex items-center justify-center space-x-1">
                                 <button
+                                  type="button"
                                   onClick={() => {
                                     setEmailModalTarget({ email: cliente.correo, name: cliente.contacto || cliente.empresa });
                                     setIsSendEmailOpen(true);
@@ -2430,6 +2693,7 @@ export default function App() {
                                   <Mail size={15} />
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => {
                                     setMeetingModalTarget({ email: cliente.correo, name: cliente.contacto || cliente.empresa });
                                     setIsScheduleMeetingOpen(true);
@@ -2438,6 +2702,34 @@ export default function App() {
                                   title="Programar Reunión"
                                 >
                                   <Video size={15} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIntegrationModalInfo({ 
+                                      isOpen: true, 
+                                      type: 'llamada', 
+                                      contactName: cliente.contacto || cliente.empresa 
+                                    });
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                  title="Llamada de Agente IA (n8n)"
+                                >
+                                  <Phone size={15} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIntegrationModalInfo({ 
+                                      isOpen: true, 
+                                      type: 'whatsapp', 
+                                      contactName: cliente.contacto || cliente.empresa 
+                                    });
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                  title="Enviar Plantilla WhatsApp (n8n)"
+                                >
+                                  <MessageCircle size={15} />
                                 </button>
                               </div>
                             </td>
@@ -2740,6 +3032,7 @@ export default function App() {
                             <td className="py-3 px-4 text-center">
                               <div className="flex items-center justify-center space-x-1">
                                 <button
+                                  type="button"
                                   onClick={() => {
                                     setEmailModalTarget({ email: p.correo, name: p.contacto || p.empresa });
                                     setIsSendEmailOpen(true);
@@ -2750,6 +3043,7 @@ export default function App() {
                                   <Mail size={15} />
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => {
                                     setMeetingModalTarget({ email: p.correo, name: p.contacto || p.empresa });
                                     setIsScheduleMeetingOpen(true);
@@ -2758,6 +3052,34 @@ export default function App() {
                                   title="Programar Reunión"
                                 >
                                   <Video size={15} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIntegrationModalInfo({ 
+                                      isOpen: true, 
+                                      type: 'llamada', 
+                                      contactName: p.contacto || p.empresa 
+                                    });
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                  title="Llamada de Agente IA (n8n)"
+                                >
+                                  <Phone size={15} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIntegrationModalInfo({ 
+                                      isOpen: true, 
+                                      type: 'whatsapp', 
+                                      contactName: p.contacto || p.empresa 
+                                    });
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                  title="Enviar Plantilla WhatsApp (n8n)"
+                                >
+                                  <MessageCircle size={15} />
                                 </button>
                               </div>
                             </td>
@@ -3294,6 +3616,7 @@ export default function App() {
                               <td className="py-3 px-4 text-center">
                                 <div className="flex items-center justify-center space-x-1">
                                   <button
+                                    type="button"
                                     onClick={() => {
                                       setEmailModalTarget({ email: rowEmail, name: r.cliente });
                                       setIsSendEmailOpen(true);
@@ -3304,6 +3627,7 @@ export default function App() {
                                     <Mail size={15} />
                                   </button>
                                   <button
+                                    type="button"
                                     onClick={() => {
                                       setMeetingModalTarget({ email: rowEmail, name: r.cliente });
                                       setIsScheduleMeetingOpen(true);
@@ -3312,6 +3636,34 @@ export default function App() {
                                     title="Programar Reunión"
                                   >
                                     <Video size={15} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIntegrationModalInfo({ 
+                                        isOpen: true, 
+                                        type: 'llamada', 
+                                        contactName: r.cliente 
+                                      });
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                    title="Llamada de Agente IA (n8n)"
+                                  >
+                                    <Phone size={15} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIntegrationModalInfo({ 
+                                        isOpen: true, 
+                                        type: 'whatsapp', 
+                                        contactName: r.cliente 
+                                      });
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                    title="Enviar Plantilla WhatsApp (n8n)"
+                                  >
+                                    <MessageCircle size={15} />
                                   </button>
                                 </div>
                               </td>
@@ -3642,7 +3994,7 @@ export default function App() {
                 )}
               </div>
             </div>
-          ) : (
+          ) : activeModule === 'gastos' ? (
             /* FULL GASTOS WORKSPACE (ACTIVE STATE) */
             <div className="animate-in fade-in duration-200">
               
@@ -3874,9 +4226,809 @@ export default function App() {
                 )}
               </div>
             </div>
+          ) : activeModule === 'api-n8n' ? (
+            /* API PARA N8N WORKSPACE */
+            <div className="animate-in fade-in duration-200 space-y-6">
+              
+              {/* Main Banner Card */}
+              <div className="bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white p-6 sm:p-8 rounded-3xl shadow-[0_15px_40px_rgba(46,91,255,0.12)] border-0 relative overflow-hidden animate-in slide-in-from-top-4 duration-300">
+                <div className="absolute -right-10 -bottom-10 w-44 h-44 text-white/5 pointer-events-none">
+                  <Cpu size={176} />
+                </div>
+                <div className="max-w-2xl relative z-10 space-y-2">
+                  <span className="bg-white/20 text-white font-bold text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full">
+                    AUTOMATIZACIÓN CON n8n
+                  </span>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-display">
+                    Integra Centinela con tu n8n
+                  </h1>
+                  <p className="text-sm text-white/80 leading-relaxed">
+                    Usa esta API REST segura para conectar tus flujos de n8n, Make u otras plataformas. Agrega clientes, consulta prospectos o sincroniza tareas automáticamente con Google Sheets.
+                  </p>
+                </div>
+              </div>
+
+              {/* API Credentials & Sync Controls */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Credentials */}
+                <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-5">
+                  <div className="flex items-center space-x-3 border-b border-slate-100/50 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                      <Cpu size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-800 text-sm">Credenciales de API</h3>
+                      <p className="text-xs text-slate-400">Datos para autorizar tus peticiones HTTP</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* API Base URL */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        URL Base de la API
+                      </label>
+                      <div className="flex rounded-xl bg-slate-50 border border-slate-100 p-1">
+                        <input
+                          type="text"
+                          readOnly
+                          value={`${window.location.origin}/api`}
+                          className="flex-1 bg-transparent border-none text-slate-600 text-xs font-mono font-medium px-3 focus:outline-none focus:ring-0"
+                        />
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/api`);
+                            setSuccessMessage('¡URL Base copiada al portapapeles!');
+                            setTimeout(() => setSuccessMessage(null), 3000);
+                          }}
+                          className="px-3.5 py-1.5 bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold rounded-lg transition-all"
+                        >
+                          Copiar
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* API Key */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        X-API-Key (Token Secreto)
+                      </label>
+                      <div className="flex rounded-xl bg-slate-50 border border-slate-100 p-1">
+                        <input
+                          type="text"
+                          readOnly
+                          value={apiConfigKey || 'cargando...'}
+                          className="flex-1 bg-transparent border-none text-slate-600 text-xs font-mono font-medium px-3 focus:outline-none focus:ring-0"
+                        />
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(apiConfigKey);
+                            setSuccessMessage('¡API Key copiada al portapapeles!');
+                            setTimeout(() => setSuccessMessage(null), 3000);
+                          }}
+                          className="px-3.5 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-bold rounded-lg transition-all"
+                        >
+                          Copiar Key
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-slate-400">
+                        Pasa esta clave en la cabecera <code>X-API-Key</code> de tus consultas.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Server Status & Manual Sync */}
+                <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100/50 pb-4">
+                      <div className="flex items-center space-x-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-bold text-slate-800 text-sm">Estado del Servidor</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold">
+                        ONLINE
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-400">Base de Datos Local:</span>
+                        <span className="font-mono text-slate-700 font-bold bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                          db.json
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-400">Última Sincronización:</span>
+                        <span className="font-medium text-slate-800">
+                          {lastSyncedTime || 'Nunca sincronizado'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <button
+                      onClick={async () => {
+                        if (!token) return;
+                        setIsSyncingWithApi(true);
+                        await loadSpreadsheetData(token);
+                        setSuccessMessage('¡Base de datos sincronizada con Sheets!');
+                        setTimeout(() => setSuccessMessage(null), 3000);
+                      }}
+                      disabled={isSyncingWithApi || !token}
+                      className="w-full py-3 px-4 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                    >
+                      <RefreshCw size={15} className={isSyncingWithApi ? 'animate-spin' : ''} />
+                      <span>{isSyncingWithApi ? 'Sincronizando...' : 'Sincronizar Sheets con Caché'}</span>
+                    </button>
+                    <p className="text-[9px] text-center text-slate-400 mt-2">
+                      Sincroniza bidireccionalmente los cambios pendientes de la API con Google Sheets.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Bento Grid Stats */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">
+                  Registros en Caché de API
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {[
+                    { label: 'Clientes', count: clientes.length, color: 'text-blue-600 bg-blue-50 border-blue-100/50' },
+                    { label: 'Prospectos', count: prospectos.length, color: 'text-purple-600 bg-purple-50 border-purple-100/50' },
+                    { label: 'Ventas', count: ventas.length, color: 'text-emerald-600 bg-emerald-50 border-emerald-100/50' },
+                    { label: 'Gastos', count: gastos.length, color: 'text-rose-600 bg-rose-50 border-rose-100/50' },
+                    { label: 'Renovaciones', count: renovaciones.length, color: 'text-amber-600 bg-amber-50 border-amber-100/50' },
+                    { label: 'Tareas', count: tareas.length, color: 'text-indigo-600 bg-indigo-50 border-indigo-100/50' }
+                  ].map((card, i) => (
+                    <div key={i} className="bg-white border border-slate-100 rounded-2xl p-4 text-center shadow-xs flex flex-col items-center justify-center space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{card.label}</span>
+                      <span className={`text-2xl font-black ${card.color.split(' ')[0]}`}>{card.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Interactive Endpoint Documentation Builder */}
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-5">
+                <div className="border-b border-slate-100/50 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-sm">Explorador Interactivo de Endpoints</h3>
+                    <p className="text-xs text-slate-400">Selecciona una colección o acción para generar ejemplos cURL listos para configurar en n8n.</p>
+                  </div>
+                  
+                  {/* Selector de Recurso */}
+                  <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl">
+                    {[
+                      { id: 'clientes', label: 'Clientes' },
+                      { id: 'prospectos', label: 'Prospectos' },
+                      { id: 'ventas', label: 'Ventas' },
+                      { id: 'gastos', label: 'Gastos' },
+                      { id: 'renovaciones', label: 'Renovaciones' },
+                      { id: 'tareas', label: 'Tareas' },
+                      { id: 'acciones', label: 'Acciones' }
+                    ].map((resource) => (
+                      <button
+                        key={resource.id}
+                        type="button"
+                        onClick={() => {
+                          setApiDocResource(resource.id as any);
+                          // Acciones only supports POST, others support both
+                          if (resource.id === 'acciones') {
+                            setApiDocMethod('POST');
+                          } else {
+                            setApiDocMethod('GET');
+                          }
+                        }}
+                        className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all ${
+                          apiDocResource === resource.id
+                            ? 'bg-white text-slate-900 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {resource.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Selector de Método (GET vs POST) */}
+                  {apiDocResource !== 'acciones' && (
+                    <div className="flex space-x-2 border-b border-slate-100 pb-3">
+                      <button
+                        type="button"
+                        onClick={() => setApiDocMethod('GET')}
+                        className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                          apiDocMethod === 'GET'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                      >
+                        GET (Obtener listado)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setApiDocMethod('POST')}
+                        className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                          apiDocMethod === 'POST'
+                            ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                            : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                      >
+                        POST (Crear nuevo)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Dynamic cURL and Payload Display based on Selection */}
+                  <div className="space-y-4">
+                    {/* GET - Clientes */}
+                    {apiDocResource === 'clientes' && apiDocMethod === 'GET' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                          GET /api/clientes
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Obtiene un listado de todos los clientes almacenados en la caché del servidor y que se sincronizan con la pestaña <strong>Clientes</strong> de Google Sheets.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X GET \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  "${window.location.origin}/api/clientes"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X GET -H "X-API-Key: ${apiConfigKey}" "${window.location.origin}/api/clientes"`);
+                              setSuccessMessage('¡cURL GET Clientes copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* POST - Clientes */}
+                    {apiDocResource === 'clientes' && apiDocMethod === 'POST' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                          POST /api/clientes
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Crea un nuevo cliente. Este registro se almacena en la caché de Centinela y se sincroniza bidireccionalmente en tu hoja de Google Sheets.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X POST \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "empresa": "Nueva Empresa S.A.",
+    "contacto": "Carlos Mendoza",
+    "correo": "carlos@empresa.com",
+    "telefono": "+57 301 987 6543",
+    "servicio": "Suscripción Trimestral",
+    "valorSuscripcion": "180000",
+    "estado": "Activo",
+    "comentarios": "Cliente registrado automáticamente desde n8n"
+  }' \\
+  "${window.location.origin}/api/clientes"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X POST -H "X-API-Key: ${apiConfigKey}" -H "Content-Type: application/json" -d '{"empresa": "Nueva Empresa S.A.", "contacto": "Carlos Mendoza", "correo": "carlos@empresa.com", "telefono": "+57 301 987 6543", "servicio": "Suscripción Trimestral", "valorSuscripcion": "180000", "estado": "Activo", "comentarios": "Cliente registrado automáticamente desde n8n"}' "${window.location.origin}/api/clientes"`);
+                              setSuccessMessage('¡cURL POST Cliente copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* GET - Prospectos */}
+                    {apiDocResource === 'prospectos' && apiDocMethod === 'GET' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                          GET /api/prospectos
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Retorna la lista de todos los prospectos en negociación, mapeados desde la pestaña <strong>Prospectos</strong> de Google Sheets.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X GET \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  "${window.location.origin}/api/prospectos"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X GET -H "X-API-Key: ${apiConfigKey}" "${window.location.origin}/api/prospectos"`);
+                              setSuccessMessage('¡cURL GET Prospectos copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* POST - Prospectos */}
+                    {apiDocResource === 'prospectos' && apiDocMethod === 'POST' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                          POST /api/prospectos
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Inserta un nuevo prospecto en la base de datos de negociación. Útil para integraciones de captación de leads (p.ej. Typeform o Facebook Lead Ads).
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X POST \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "empresa": "Empresa Tecnológica SAS",
+    "contacto": "Sofía Martínez",
+    "correo": "sofia@tech.com",
+    "telefono": "+57 320 456 7890",
+    "servicio": "Auditoría de Sistemas",
+    "valorEstimado": "500000",
+    "estado": "Nuevo",
+    "origen": "LinkedIn Campaign",
+    "fechaContacto": "${new Date().toISOString().split('T')[0]}",
+    "comentarios": "Interesado en soporte mensual"
+  }' \\
+  "${window.location.origin}/api/prospectos"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X POST -H "X-API-Key: ${apiConfigKey}" -H "Content-Type: application/json" -d '{"empresa": "Empresa Tecnológica SAS", "contacto": "Sofía Martínez", "correo": "sofia@tech.com", "telefono": "+57 320 456 7890", "servicio": "Auditoría de Sistemas", "valorEstimado": "500000", "estado": "Nuevo", "origen": "LinkedIn Campaign", "fechaContacto": "${new Date().toISOString().split('T')[0]}", "comentarios": "Interesado en soporte mensual"}' "${window.location.origin}/api/prospectos"`);
+                              setSuccessMessage('¡cURL POST Prospecto copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* GET - Ventas */}
+                    {apiDocResource === 'ventas' && apiDocMethod === 'GET' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                          GET /api/ventas
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Obtiene el registro histórico de todas las ventas para su análisis o reporte, sincronizadas con la pestaña de <strong>Ventas</strong>.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X GET \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  "${window.location.origin}/api/ventas"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X GET -H "X-API-Key: ${apiConfigKey}" "${window.location.origin}/api/ventas"`);
+                              setSuccessMessage('¡cURL GET Ventas copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* POST - Ventas */}
+                    {apiDocResource === 'ventas' && apiDocMethod === 'POST' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                          POST /api/ventas
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Registra un ingreso o cobro. Útil para reportar cierres de caja o transacciones de pasarelas de pago externas (p.ej. Stripe o Wompi) directamente a tu CRM.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X POST \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "cliente": "Empresa Tecnológica SAS",
+    "servicio": "Auditoría de Sistemas",
+    "monto": "500000",
+    "fecha": "${new Date().toISOString().split('T')[0]}",
+    "comentarios": "Cobro de adelanto del 50% vía transferencia bancaria"
+  }' \\
+  "${window.location.origin}/api/ventas"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X POST -H "X-API-Key: ${apiConfigKey}" -H "Content-Type: application/json" -d '{"cliente": "Empresa Tecnológica SAS", "servicio": "Auditoría de Sistemas", "monto": "500000", "fecha": "${new Date().toISOString().split('T')[0]}", "comentarios": "Cobro de adelanto del 50% vía transferencia bancaria"}' "${window.location.origin}/api/ventas"`);
+                              setSuccessMessage('¡cURL POST Venta copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* GET - Gastos */}
+                    {apiDocResource === 'gastos' && apiDocMethod === 'GET' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                          GET /api/gastos
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Lista los egresos de dinero, sincronizados desde la pestaña <strong>Gastos</strong> de tu Google Sheet.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X GET \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  "${window.location.origin}/api/gastos"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X GET -H "X-API-Key: ${apiConfigKey}" "${window.location.origin}/api/gastos"`);
+                              setSuccessMessage('¡cURL GET Gastos copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* POST - Gastos */}
+                    {apiDocResource === 'gastos' && apiDocMethod === 'POST' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                          POST /api/gastos
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Agrega un nuevo gasto para llevar el balance financiero del negocio. Ideal para emparejar con sistemas de facturación automática.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X POST \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "descripcion": "Suscripción n8n Cloud",
+    "categoria": "SaaS / Tecnología",
+    "monto": "20000",
+    "fecha": "${new Date().toISOString().split('T')[0]}",
+    "proveedor": "n8n.io",
+    "comentarios": "Pago recurrente mensual"
+  }' \\
+  "${window.location.origin}/api/gastos"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X POST -H "X-API-Key: ${apiConfigKey}" -H "Content-Type: application/json" -d '{"descripcion": "Suscripción n8n Cloud", "categoria": "SaaS / Tecnología", "monto": "20000", "fecha": "${new Date().toISOString().split('T')[0]}", "proveedor": "n8n.io", "comentarios": "Pago recurrente mensual"}' "${window.location.origin}/api/gastos"`);
+                              setSuccessMessage('¡cURL POST Gasto copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* GET - Renovaciones */}
+                    {apiDocResource === 'renovaciones' && apiDocMethod === 'GET' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                          GET /api/renovaciones
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Obtiene las renovaciones programadas, ideales para alimentar recordatorios automáticos de vencimiento por correo o WhatsApp.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X GET \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  "${window.location.origin}/api/renovaciones"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X GET -H "X-API-Key: ${apiConfigKey}" "${window.location.origin}/api/renovaciones"`);
+                              setSuccessMessage('¡cURL GET Renovaciones copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* POST - Renovaciones */}
+                    {apiDocResource === 'renovaciones' && apiDocMethod === 'POST' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                          POST /api/renovaciones
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Registra un nuevo ciclo de renovación de contrato de servicio, guardándolo en la pestaña de <strong>Renovaciones</strong>.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X POST \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "cliente": "Nueva Empresa S.A.",
+    "servicio": "Suscripción Trimestral",
+    "valor": "180000",
+    "fechaInicio": "${new Date().toISOString().split('T')[0]}",
+    "fechaVencimiento": "${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}",
+    "estado": "Pendiente",
+    "comentarios": "Renovación anticipada n8n"
+  }' \\
+  "${window.location.origin}/api/renovaciones"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X POST -H "X-API-Key: ${apiConfigKey}" -H "Content-Type: application/json" -d '{"cliente": "Nueva Empresa S.A.", "servicio": "Suscripción Trimestral", "valor": "180000", "fechaInicio": "${new Date().toISOString().split('T')[0]}", "fechaVencimiento": "${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}", "estado": "Pendiente", "comentarios": "Renovación anticipada n8n"}' "${window.location.origin}/api/renovaciones"`);
+                              setSuccessMessage('¡cURL POST Renovación copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* GET - Tareas */}
+                    {apiDocResource === 'tareas' && apiDocMethod === 'GET' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                          GET /api/tareas
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Devuelve todas las actividades y tareas registradas en la pestaña de <strong>Tareas</strong>.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X GET \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  "${window.location.origin}/api/tareas"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X GET -H "X-API-Key: ${apiConfigKey}" "${window.location.origin}/api/tareas"`);
+                              setSuccessMessage('¡cURL GET Tareas copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* POST - Tareas */}
+                    {apiDocResource === 'tareas' && apiDocMethod === 'POST' && (
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                          POST /api/tareas
+                        </span>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Crea una nueva tarea operativa en el CRM.
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                          <pre>{`curl -X POST \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "titulo": "Llamada de seguimiento n8n",
+    "descripcion": "Revisar avance con el cliente",
+    "prioridad": "Alta",
+    "fecha": "${new Date().toISOString().split('T')[0]}",
+    "estado": "Pendiente"
+  }' \\
+  "${window.location.origin}/api/tareas"`}</pre>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`curl -X POST -H "X-API-Key: ${apiConfigKey}" -H "Content-Type: application/json" -d '{"titulo": "Llamada de seguimiento n8n", "descripcion": "Revisar avance con el cliente", "prioridad": "Alta", "fecha": "${new Date().toISOString().split('T')[0]}", "estado": "Pendiente"}' "${window.location.origin}/api/tareas"`);
+                              setSuccessMessage('¡cURL POST Tarea copiado!');
+                              setTimeout(() => setSuccessMessage(null), 3000);
+                            }}
+                            className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* POST - Acciones Automatizadas */}
+                    {apiDocResource === 'acciones' && (
+                      <div className="space-y-6">
+                        {/* Sub-acción 1: Correo */}
+                        <div className="space-y-2 border-b border-slate-100 pb-5">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                            POST /api/acciones/correo
+                          </span>
+                          <p className="text-xs text-slate-500 leading-relaxed">
+                            Procesa y registra el envío automatizado de correos. n8n puede capturar esta petición para disparar plantillas de Gmail o Outlook automatizadas con los datos especificados.
+                          </p>
+                          <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                            <pre>{`curl -X POST \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "destinatario": "correo@cliente.com",
+    "asunto": "Recordatorio de renovación Centinela",
+    "cuerpo": "Hola Carlos, esperamos que estés excelente. Te escribimos para recordarte...",
+    "clienteNombre": "Carlos Mendoza"
+  }' \\
+  "${window.location.origin}/api/acciones/correo"`}</pre>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`curl -X POST -H "X-API-Key: ${apiConfigKey}" -H "Content-Type: application/json" -d '{"destinatario": "correo@cliente.com", "asunto": "Recordatorio de renovación Centinela", "cuerpo": "Hola Carlos, esperamos que estés excelente. Te escribimos para recordarte...", "clienteNombre": "Carlos Mendoza"}' "${window.location.origin}/api/acciones/correo"`);
+                                setSuccessMessage('¡cURL Enviar Correo copiado!');
+                                setTimeout(() => setSuccessMessage(null), 3000);
+                              }}
+                              className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                              Copiar
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Sub-acción 2: Reuniones */}
+                        <div className="space-y-2">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                            POST /api/acciones/reunion
+                          </span>
+                          <p className="text-xs text-slate-500 leading-relaxed">
+                            Programa una nueva videoconferencia. n8n puede procesar esto para crear automáticamente salas en Google Meet, Microsoft Teams o Zoom y sincronizar la cita en Google Calendar.
+                          </p>
+                          <div className="bg-slate-900 text-slate-200 rounded-xl p-4 font-mono text-[11px] overflow-x-auto shadow-inner relative group">
+                            <pre>{`curl -X POST \\
+  -H "X-API-Key: ${apiConfigKey || 'TU_CLAVE_SECRETA'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "destinatario": "correo@cliente.com",
+    "clienteNombre": "Carlos Mendoza",
+    "titulo": "Reunión de Avance Técnico y Seguimiento",
+    "fechaHora": "2026-07-20T10:00:00",
+    "linkVideo": "https://meet.google.com/abc-defg-hij"
+  }' \\
+  "${window.location.origin}/api/acciones/reunion"`}</pre>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`curl -X POST -H "X-API-Key: ${apiConfigKey}" -H "Content-Type: application/json" -d '{"destinatario": "correo@cliente.com", "clienteNombre": "Carlos Mendoza", "titulo": "Reunión de Avance Técnico y Seguimiento", "fechaHora": "2026-07-20T10:00:00", "linkVideo": "https://meet.google.com/abc-defg-hij"}' "${window.location.origin}/api/acciones/reunion"`);
+                                setSuccessMessage('¡cURL Programar Reunión copiado!');
+                                setTimeout(() => setSuccessMessage(null), 3000);
+                              }}
+                              className="absolute right-3 top-3 px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                              Copiar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-slate-400">
+              Cargando módulo...
+            </div>
           )}
         </div>
       </main>
+
+      {/* Subtle Integrations Alert Modal */}
+      {integrationModalInfo.isOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in p-4">
+          <div 
+            className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 relative scale-in space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  integrationModalInfo.type === 'llamada' 
+                    ? 'bg-blue-50 text-blue-600' 
+                    : 'bg-emerald-50 text-emerald-600'
+                }`}>
+                  {integrationModalInfo.type === 'llamada' ? <Phone size={20} /> : <MessageCircle size={20} />}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800 leading-tight">
+                    {integrationModalInfo.type === 'llamada' 
+                      ? 'Llamada de Agente IA' 
+                      : 'Envío de Plantilla WhatsApp'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                    Integración Automática vía n8n
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIntegrationModalInfo({ isOpen: false, type: null })}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 p-1.5 rounded-lg transition-all"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="bg-slate-50 border border-slate-100/80 rounded-2xl p-4 text-xs text-slate-600 leading-relaxed space-y-2">
+                <p>
+                  Has hecho clic en la acción automatizada para <strong>{integrationModalInfo.contactName || 'este contacto'}</strong>.
+                </p>
+                {integrationModalInfo.type === 'llamada' ? (
+                  <p>
+                    Esta función prepara una <strong>Llamada Telefónica Automática con un Agente de Voz IA</strong> que puede conversar de forma natural, calificar al contacto y registrar el resultado de forma autónoma en Google Sheets.
+                  </p>
+                ) : (
+                  <p>
+                    Esta función automatiza el <strong>Envío de una Plantilla de WhatsApp Pre-aprobada</strong> (como notificaciones de cobranza, bienvenida o recordatorios de citas) a través de proveedores conectados.
+                  </p>
+                )}
+                <p className="text-slate-400 text-[11px] border-t border-slate-100 pt-2 font-medium">
+                  💡 Para activar y conectar estos botones a tus propios webhooks de n8n, puedes consultar nuestra documentación o contactar directamente al equipo de <strong>empresariopuntocom</strong> para una llave y flujo listo para usar.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIntegrationModalInfo({ isOpen: false, type: null });
+                  setActiveModule('api-n8n');
+                }}
+                className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl transition-all"
+              >
+                Ver Documentación API
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIntegrationModalInfo({ isOpen: false, type: null });
+                  window.open("https://empresario.com.co", "_blank");
+                }}
+                className="flex-1 py-2.5 px-4 bg-slate-900 text-white hover:bg-slate-800 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-1"
+              >
+                <span>Contactar</span>
+                <ExternalLink size={12} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Company Settings Modal */}
       {isCompanyModalOpen && (
