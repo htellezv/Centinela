@@ -109,7 +109,11 @@ import {
   ChevronRight,
   Cpu,
   Phone,
-  MessageCircle
+  MessageCircle,
+  Puzzle,
+  Chrome,
+  Zap,
+  Sparkles
 } from 'lucide-react';
 import ClienteForm from './components/ClienteForm';
 import ProspectoForm from './components/ProspectoForm';
@@ -136,7 +140,7 @@ export default function App() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Active module
-  const [activeModule, setActiveModule] = useState<'dashboard' | 'clientes' | 'prospectos' | 'ventas' | 'gastos' | 'renovaciones' | 'tareas' | 'api-n8n'>('dashboard');
+  const [activeModule, setActiveModule] = useState<'dashboard' | 'clientes' | 'prospectos' | 'ventas' | 'gastos' | 'renovaciones' | 'tareas' | 'api-n8n' | 'lead-extractor'>('dashboard');
   const [isSyncingWithApi, setIsSyncingWithApi] = useState(false);
   const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(localStorage.getItem('centinela_last_sync_time'));
   const [apiConfigKey, setApiConfigKey] = useState<string>('');
@@ -176,6 +180,858 @@ export default function App() {
         .catch(err => console.error("Error fetching internal api key config:", err));
     }
   }, [activeModule]);
+
+  const generateAndDownloadChromeExtension = async () => {
+    /*
+    setIsGeneratingZip(true);
+    try {
+      const zip = new JSZip();
+
+      // Generate PNG icons using Canvas
+      const drawLogoToBlob = (size: number): Promise<Uint8Array> => {
+        return new Promise((resolve) => {
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            // Background gradient
+            const grad = ctx.createLinearGradient(0, 0, size, size);
+            grad.addColorStop(0, '#2E5BFF');
+            grad.addColorStop(1, '#00F5D4');
+            ctx.fillStyle = grad;
+            
+            // Rounded rect
+            const radius = size * 0.25;
+            ctx.beginPath();
+            if (typeof ctx.roundRect === 'function') {
+              ctx.roundRect(0, 0, size, size, radius);
+            } else {
+              ctx.rect(0, 0, size, size);
+            }
+            ctx.fill();
+
+            // Draw 'C' text
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `bold ${Math.round(size * 0.6)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('C', size / 2, size / 2);
+          }
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                resolve(new Uint8Array(reader.result as ArrayBuffer));
+              };
+              reader.readAsArrayBuffer(blob);
+            } else {
+              resolve(new Uint8Array());
+            }
+          }, 'image/png');
+        });
+      };
+
+      const icon16 = await drawLogoToBlob(16);
+      const icon48 = await drawLogoToBlob(48);
+      const icon128 = await drawLogoToBlob(128);
+
+      zip.file('icon16.png', icon16);
+      zip.file('icon48.png', icon48);
+      zip.file('icon128.png', icon128);
+
+      // Manifest V3
+      const manifestJson = {
+        manifest_version: 3,
+        name: "Centinela Prospect Scraper",
+        version: "1.0.0",
+        description: "Extrae prospectos de cualquier página web (Google Maps, LinkedIn, etc.) y guárdalos directamente en tu CRM Centinela.",
+        permissions: [
+          "activeTab",
+          "scripting",
+          "storage"
+        ],
+        host_permissions: [
+          "<all_urls>"
+        ],
+        action: {
+          default_popup: "popup.html",
+          default_icon: {
+            "16": "icon16.png",
+            "48": "icon48.png",
+            "128": "icon128.png"
+          }
+        },
+        icons: {
+          "16": "icon16.png",
+          "48": "icon48.png",
+          "128": "icon128.png"
+        }
+      };
+
+      zip.file('manifest.json', JSON.stringify(manifestJson, null, 2));
+
+      // popup.html
+      const popupHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 350px;
+      margin: 0;
+      padding: 16px;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .logo-img {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #2E5BFF 0%, #00F5D4 100%);
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
+      letter-spacing: -0.025em;
+    }
+    .subtitle {
+      font-size: 10px;
+      color: #94a3b8;
+      margin: 2px 0 0 0;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .section {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin: 0 0 10px 0;
+      letter-spacing: 0.05em;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+    label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #334155;
+      background-color: #f1f5f9;
+      transition: all 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #2E5BFF;
+      background-color: white;
+      box-shadow: 0 0 0 3px rgba(46,91,255,0.1);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2E5BFF 0%, #1D9BF0 100%);
+      color: white;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(46,91,255,0.15);
+    }
+    .btn-primary:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background-color: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      padding: 8px;
+      width: 100%;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 11px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all 0.1s;
+    }
+    .btn-secondary:hover {
+      background-color: #e2e8f0;
+      color: #1e293b;
+    }
+    .btn-download-csv {
+      background-color: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      padding: 7px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 10px;
+      cursor: pointer;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.1s;
+    }
+    .btn-download-csv:hover {
+      background-color: #dcfce7;
+      color: #15803d;
+    }
+    .status-msg {
+      font-size: 11px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      display: none;
+    }
+    .status-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .status-error { background: #fff5f5; color: #9b2c2c; border: 1px solid #feb2b2; }
+    .loader {
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #2E5BFF;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-img">C</div>
+    <div>
+      <h2 class="title">Centinela Scraper</h2>
+      <p class="subtitle">Extractor de Prospectos</p>
+    </div>
+  </div>
+
+  <div class="section" style="padding: 10px; background-color: #f8fafc;">
+    <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" id="toggle-settings">
+      <span class="section-title" style="margin:0;">⚙️ Configuración CRM</span>
+      <span style="font-size:10px; color:#64748b;" id="settings-arrow">▶</span>
+    </div>
+    <div id="settings-body" style="display:none; margin-top:10px; border-top:1px solid #e2e8f0; padding-top:10px;">
+      <div class="form-group">
+        <label>URL del CRM Centinela</label>
+        <input type="text" id="crm-url" placeholder="https://www.centinela.top">
+      </div>
+      <div class="form-group">
+        <label>API Key Secreta</label>
+        <input type="password" id="api-key" placeholder="API Key de tu panel">
+      </div>
+      <button class="btn-secondary" id="save-settings" style="margin: 8px 0 0 0;">Guardar Credenciales</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <span class="section-title">🔍 Extraer de la pestaña activa</span>
+    <button class="btn-secondary" id="btn-scrape">⚡ Escanear Datos de la Página</button>
+    <div style="font-size:10px; color:#64748b; text-align:center;">
+      Ideal para Google Maps, LinkedIn o datos genéricos
+    </div>
+  </div>
+
+  <div class="section">
+    <span class="section-title">📋 Datos del Prospecto</span>
+    
+    <div class="form-group">
+      <label>Contacto / Nombre Completo</label>
+      <input type="text" id="lead-name" placeholder="Ej: Juan Pérez">
+    </div>
+    
+    <div class="form-group">
+      <label>Teléfono (con Indicativo)</label>
+      <input type="text" id="lead-phone" placeholder="Ej: +573001234567">
+    </div>
+
+    <div class="form-group">
+      <label>Empresa</label>
+      <input type="text" id="lead-company" placeholder="Ej: Centinela Inc.">
+    </div>
+
+    <div class="form-group">
+      <label>Correo Electrónico</label>
+      <input type="text" id="lead-email" placeholder="Ej: contacto@empresa.com">
+    </div>
+
+    <div class="form-group">
+      <label>Servicio de Interés</label>
+      <input type="text" id="lead-service" placeholder="Ej: Seguro, Software, etc.">
+    </div>
+
+    <div class="form-group border-t" style="margin-top:10px; padding-top:10px;">
+      <label>Observaciones / Notas Extraídas</label>
+      <textarea id="lead-notes" rows="3" placeholder="Detalles, enlaces, etc." style="resize: none; font-family:inherit;"></textarea>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="btn-save-crm" style="margin-bottom: 12px;">
+    <span>Guardar en Centinela CRM</span>
+  </button>
+
+  <div class="section" style="margin-bottom: 0;">
+    <span class="section-title">📂 Acciones y Descargas</span>
+    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+      <button class="btn-download-csv" id="btn-download-actual">
+        📥 Descargar Actual CSV
+      </button>
+      <button class="btn-download-csv" id="btn-download-crm" style="background-color: #eff6ff; color: #1e40af; border-color: #bfdbfe;">
+        📊 Descargar Todo CRM
+      </button>
+    </div>
+    <button class="btn-secondary" id="btn-open-crm" style="margin-bottom: 0; background: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; font-weight: bold; font-size: 11px;">
+      🌐 Ir a mi CRM Centinela
+    </button>
+  </div>
+
+  <div id="status-box" class="status-msg"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>`;
+
+      zip.file('popup.html', popupHtml);
+
+      // popup.js with pre-configured variables
+      const currentOrigin = window.location.origin;
+      const popupJs = `document.addEventListener('DOMContentLoaded', () => {
+  const toggleSettings = document.getElementById('toggle-settings');
+  const settingsBody = document.getElementById('settings-body');
+  const settingsArrow = document.getElementById('settings-arrow');
+  
+  const crmUrlInput = document.getElementById('crm-url');
+  const apiKeyInput = document.getElementById('api-key');
+  const saveSettingsBtn = document.getElementById('save-settings');
+  
+  const scrapeBtn = document.getElementById('btn-scrape');
+  const saveCrmBtn = document.getElementById('btn-save-crm');
+
+  const downloadActualBtn = document.getElementById('btn-download-actual');
+  const downloadCrmBtn = document.getElementById('btn-download-crm');
+  const openCrmBtn = document.getElementById('btn-open-crm');
+  
+  const leadName = document.getElementById('lead-name');
+  const leadPhone = document.getElementById('lead-phone');
+  const leadCompany = document.getElementById('lead-company');
+  const leadEmail = document.getElementById('lead-email');
+  const leadService = document.getElementById('lead-service');
+  const leadNotes = document.getElementById('lead-notes');
+  
+  const statusBox = document.getElementById('status-box');
+
+  toggleSettings.addEventListener('click', () => {
+    if (settingsBody.style.display === 'none') {
+      settingsBody.style.display = 'block';
+      settingsArrow.innerText = '▼';
+    } else {
+      settingsBody.style.display = 'none';
+      settingsArrow.innerText = '▶';
+    }
+  });
+
+  // Load configured keys
+  chrome.storage.local.get(['crmUrl', 'apiKey'], (data) => {
+    const defaultUrl = "${currentOrigin}";
+    const defaultKey = "${apiConfigKey || ''}";
+    
+    if (data.crmUrl) {
+      crmUrlInput.value = data.crmUrl;
+    } else if (defaultUrl) {
+      crmUrlInput.value = defaultUrl;
+    }
+    
+    if (data.apiKey) {
+      apiKeyInput.value = data.apiKey;
+    } else if (defaultKey) {
+      apiKeyInput.value = defaultKey;
+    }
+    
+    if (!crmUrlInput.value || !apiKeyInput.value) {
+      settingsBody.style.display = 'block';
+      settingsArrow.innerText = '▼';
+    }
+  });
+
+  saveSettingsBtn.addEventListener('click', () => {
+    let url = crmUrlInput.value.trim();
+    const key = apiKeyInput.value.trim();
+    
+    if (!url || !key) {
+      showStatus('Por favor, ingresa tanto la URL como la API Key.', 'error');
+      return;
+    }
+    
+    if (url.endsWith('/')) {
+      url = url.slice(0, -1);
+    }
+    
+    chrome.storage.local.set({ crmUrl: url, apiKey: key }, () => {
+      showStatus('¡Credenciales guardadas con éxito!', 'success');
+      setTimeout(() => {
+        settingsBody.style.display = 'none';
+        settingsArrow.innerText = '▶';
+      }, 1000);
+    });
+  });
+
+  scrapeBtn.addEventListener('click', async () => {
+    scrapeBtn.disabled = true;
+    scrapeBtn.innerHTML = '<span class="loader"></span> Escaneando...';
+    showStatus('Analizando contenido de la página...', 'success');
+    
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab) {
+        showStatus('No se encontró una pestaña activa.', 'error');
+        scrapeBtn.disabled = false;
+        scrapeBtn.innerText = '⚡ Escanear Datos de la Página';
+        return;
+      }
+      
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content.js']
+      }).catch(err => console.log('Script inyectado o página protegida:', err));
+
+      chrome.tabs.sendMessage(tab.id, { action: 'scrape' }, (response) => {
+        scrapeBtn.disabled = false;
+        scrapeBtn.innerText = '⚡ Escanear Datos de la Página';
+        
+        if (chrome.runtime.lastError) {
+          showStatus('Error de comunicación con la página. Intente refrescar la pestaña.', 'error');
+          return;
+        }
+
+        if (response) {
+          if (response.name) leadName.value = response.name;
+          if (response.phone) leadPhone.value = response.phone;
+          if (response.company) leadCompany.value = response.company;
+          if (response.email) leadEmail.value = response.email;
+          if (response.service) leadService.value = response.service;
+          
+          let notes = \`Extraído de: \${tab.url}\\n\`;
+          if (response.notes) notes += \`\${response.notes}\`;
+          leadNotes.value = notes;
+          
+          showStatus('¡Datos de la página extraídos con éxito!', 'success');
+        } else {
+          showStatus('No se pudieron extraer datos automatizados de esta página.', 'error');
+        }
+      });
+    } catch (e) {
+      console.error(e);
+      scrapeBtn.disabled = false;
+      scrapeBtn.innerText = '⚡ Escanear Datos de la Página';
+      showStatus('Fallo al ejecutar extractor.', 'error');
+    }
+  });
+
+  saveCrmBtn.addEventListener('click', async () => {
+    const name = leadName.value.trim();
+    const phone = leadPhone.value.trim();
+    const company = leadCompany.value.trim();
+    const email = leadEmail.value.trim();
+    const service = leadService.value.trim();
+    const notes = leadNotes.value.trim();
+    
+    if (!name) {
+      showStatus('El nombre del contacto es obligatorio.', 'error');
+      return;
+    }
+    
+    saveCrmBtn.disabled = true;
+    saveCrmBtn.innerHTML = '<span class="loader"></span> Guardando en CRM...';
+    
+    chrome.storage.local.get(['crmUrl', 'apiKey'], async (config) => {
+      let endpointUrl = config.crmUrl || "${currentOrigin}";
+      let authKey = config.apiKey || "${apiConfigKey || ''}";
+
+      if (!endpointUrl || !authKey) {
+        showStatus('Falta configurar la URL o la API Key del CRM.', 'error');
+        saveCrmBtn.disabled = false;
+        saveCrmBtn.innerText = 'Guardar en Centinela CRM';
+        settingsBody.style.display = 'block';
+        settingsArrow.innerText = '▼';
+        return;
+      }
+      
+      const payload = {
+        contacto: name,
+        telefono: phone,
+        empresa: company || 'Extraído vía Extensión',
+        correo: email,
+        servicioInteres: service || 'Prospección Web',
+        valorEstimado: 0,
+        estado: 'Nuevo',
+        ultimoContacto: new Date().toISOString().split('T')[0],
+        proximoSeguimiento: '',
+        observaciones: notes
+      };
+      
+      try {
+        const response = await fetch(\`\${endpointUrl}/api/prospectos\`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': authKey
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        const resData = await response.json();
+        saveCrmBtn.disabled = false;
+        saveCrmBtn.innerText = 'Guardar en Centinela CRM';
+        
+        if (response.ok && resData.success) {
+          showStatus('¡Prospecto guardado exitosamente en Centinela!', 'success');
+          leadName.value = '';
+          leadPhone.value = '';
+          leadCompany.value = '';
+          leadEmail.value = '';
+          leadService.value = '';
+          leadNotes.value = '';
+        } else {
+          showStatus(\`Error del Servidor: \${resData.error || 'No autorizado'}\`, 'error');
+        }
+      } catch (err) {
+        console.error('Error post crm:', err);
+        saveCrmBtn.disabled = false;
+        saveCrmBtn.innerText = 'Guardar en Centinela CRM';
+        showStatus('No se pudo conectar con tu CRM Centinela. Revisa la URL.', 'error');
+      }
+    });
+  });
+
+  downloadActualBtn.addEventListener('click', () => {
+    const name = leadName.value.trim();
+    const phone = leadPhone.value.trim();
+    const company = leadCompany.value.trim();
+    const email = leadEmail.value.trim();
+    const service = leadService.value.trim();
+    const notes = leadNotes.value.trim();
+
+    if (!name) {
+      showStatus('El nombre del contacto es obligatorio para descargar.', 'error');
+      return;
+    }
+
+    const headers = ["Contacto/Nombre", "Telefono", "Empresa", "Correo", "Servicio Interes", "Observaciones"];
+    const row = [
+      \`"\${name.replace(/"/g, '""')}"\`,
+      \`"\${phone.replace(/"/g, '""')}"\`,
+      \`"\${company.replace(/"/g, '""')}"\`,
+      \`"\${email.replace(/"/g, '""')}"\`,
+      \`"\${service.replace(/"/g, '""')}"\`,
+      \`"\${notes.replace(/"/g, '""')}"\`
+    ];
+
+    const csvContent = "\\uFEFF" + headers.join(",") + "\\n" + row.join(",");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = \`prospecto-actual-\${name.toLowerCase().replace(/\\s+/g, '-')}.csv\`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showStatus('¡Prospecto actual descargado en CSV!', 'success');
+  });
+
+  downloadCrmBtn.addEventListener('click', () => {
+    downloadCrmBtn.disabled = true;
+    downloadCrmBtn.innerHTML = '<span class="loader"></span> Cargando...';
+    
+    chrome.storage.local.get(['crmUrl', 'apiKey'], async (config) => {
+      let endpointUrl = config.crmUrl || "${currentOrigin}";
+      let authKey = config.apiKey || "${apiConfigKey || ''}";
+
+      if (!endpointUrl || !authKey) {
+        showStatus('Falta configurar la URL o la API Key del CRM.', 'error');
+        downloadCrmBtn.disabled = false;
+        downloadCrmBtn.innerHTML = '📊 Descargar Todo CRM';
+        settingsBody.style.display = 'block';
+        settingsArrow.innerText = '▼';
+        return;
+      }
+
+      try {
+        const response = await fetch(\`\${endpointUrl}/api/prospectos\`, {
+          method: 'GET',
+          headers: {
+            'X-API-Key': authKey
+          }
+        });
+        
+        const resData = await response.json();
+        downloadCrmBtn.disabled = false;
+        downloadCrmBtn.innerHTML = '📊 Descargar Todo CRM';
+
+        if (response.ok && resData.success && resData.data) {
+          const list = resData.data;
+          if (list.length === 0) {
+            showStatus('No hay prospectos guardados en el CRM para descargar.', 'error');
+            return;
+          }
+
+          const headers = ["ID", "Contacto/Nombre", "Telefono", "Empresa", "Correo", "Servicio Interes", "Valor Estimado", "Estado", "Ultimo Contacto", "Proximo Seguimiento", "Observaciones"];
+          const csvRows = [headers.join(",")];
+
+          list.forEach(item => {
+            const row = [
+              item.id || '',
+              \`"\${(item.contacto || '').replace(/"/g, '""')}"\`,
+              \`"\${(item.telefono || '').replace(/"/g, '""')}"\`,
+              \`"\${(item.empresa || '').replace(/"/g, '""')}"\`,
+              \`"\${(item.correo || '').replace(/"/g, '""')}"\`,
+              \`"\${(item.servicioInteres || '').replace(/"/g, '""')}"\`,
+              item.valorEstimado || 0,
+              \`"\${(item.estado || '').replace(/"/g, '""')}"\`,
+              \`"\${(item.ultimoContacto || '').replace(/"/g, '""')}"\`,
+              \`"\${(item.proximoSeguimiento || '').replace(/"/g, '""')}"\`,
+              \`"\${(item.observaciones || '').replace(/"/g, '""')}"\`
+            ];
+            csvRows.push(row.join(","));
+          });
+
+          const csvContent = "\\uFEFF" + csvRows.join("\\n");
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = \`crm-prospectos-\${new Date().toISOString().split('T')[0]}.csv\`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          showStatus(\`¡\${list.length} prospectos del CRM descargados con éxito!\`, 'success');
+        } else {
+          showStatus('Error del Servidor al descargar prospectos.', 'error');
+        }
+      } catch (err) {
+        console.error('Error fetching prospectos:', err);
+        downloadCrmBtn.disabled = false;
+        downloadCrmBtn.innerHTML = '📊 Descargar Todo CRM';
+        showStatus('No se pudo conectar con el CRM.', 'error');
+      }
+    });
+  });
+
+  openCrmBtn.addEventListener('click', () => {
+    chrome.storage.local.get(['crmUrl'], (config) => {
+      let endpointUrl = config.crmUrl || "${currentOrigin}";
+      chrome.tabs.create({ url: endpointUrl });
+    });
+  });
+
+  function showStatus(text, type) {
+    statusBox.innerText = text;
+    statusBox.className = \`status-msg \${type === 'success' ? 'status-success' : 'status-error'}\`;
+    statusBox.style.display = 'block';
+    
+    if (type === 'success') {
+      setTimeout(() => {
+        if (statusBox.innerText === text) {
+          statusBox.style.display = 'none';
+        }
+      }, 4000);
+    }
+  }
+});`;
+
+      zip.file('popup.js', popupJs);
+
+      // content.js
+      const contentJs = `if (typeof window.centinelaScraperLoaded === 'undefined') {
+  window.centinelaScraperLoaded = true;
+
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'scrape') {
+      try {
+        const scrapedData = runScraper();
+        sendResponse(scrapedData);
+      } catch (err) {
+        console.error('Error running Centinela Scraper:', err);
+        sendResponse(null);
+      }
+    }
+    return true;
+  });
+
+  function runScraper() {
+    const url = window.location.href;
+    const title = document.title || '';
+    
+    let scraped = {
+      name: '',
+      phone: '',
+      company: '',
+      email: '',
+      service: '',
+      notes: ''
+    };
+
+    if (url.includes('google.com/maps') || url.includes('google.es/maps')) {
+      const nameEl = document.querySelector('h1.DUwDvf, h1.LfPIob, h1');
+      if (nameEl) scraped.name = nameEl.innerText.trim();
+
+      const phoneEl = document.querySelector('button[data-item-id^="phone:tel:"], [data-item-id^="phone:tel:"]');
+      if (phoneEl) {
+        const dataId = phoneEl.getAttribute('data-item-id') || '';
+        scraped.phone = dataId.replace('phone:tel:', '').trim();
+      } else {
+        const allText = document.body.innerText;
+        const phoneMatch = allText.match(/(?:\\+?\\d{1,3}[-.\\s]?)?\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}/);
+        if (phoneMatch) scraped.phone = phoneMatch[0];
+      }
+
+      const webEl = document.querySelector('a[data-item-id="authority"]');
+      const website = webEl ? webEl.getAttribute('href') || '' : '';
+
+      const addressEl = document.querySelector('button[data-item-id="address"]');
+      const address = addressEl ? addressEl.innerText.trim() : '';
+
+      scraped.company = scraped.name;
+      scraped.notes = \`Dirección: \${address}\\nWeb: \${website}\\n\`;
+      scraped.service = 'Prospecto de Google Maps';
+      
+      return scraped;
+    }
+
+    if (url.includes('linkedin.com/in/')) {
+      const nameEl = document.querySelector('h1.text-heading-xlarge, .pv-text-details__left-panel h1');
+      if (nameEl) scraped.name = nameEl.innerText.trim();
+
+      const headlineEl = document.querySelector('.text-body-medium, .pv-text-details__left-panel .text-body-medium');
+      const headline = headlineEl ? headlineEl.innerText.trim() : '';
+
+      const companyEl = document.querySelector('[data-field="experience_company_title"]');
+      if (companyEl) {
+        scraped.company = companyEl.innerText.trim();
+      } else {
+        const parts = headline.split(/ at | en | @ /i);
+        if (parts.length > 1) {
+          scraped.company = parts[1].split(/[|,;-]/)[0].trim();
+        }
+      }
+
+      scraped.notes = \`Cargo: \${headline}\\nPerfil LinkedIn: \${url}\\n\`;
+      scraped.service = 'Prospecto de LinkedIn';
+      
+      const emailMatch = document.body.innerText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/);
+      if (emailMatch) scraped.email = emailMatch[0];
+
+      return scraped;
+    }
+
+    const h1El = document.querySelector('h1');
+    scraped.name = h1El ? h1El.innerText.trim() : title.split(/[|-]/)[0].trim();
+    
+    const phoneRegex = /(?:\\+?\\d{1,4}[-.\\s]?)?\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}/g;
+    const bodyText = document.body.innerText;
+    
+    const telLink = document.querySelector('a[href^="tel:"]');
+    if (telLink) {
+      scraped.phone = telLink.getAttribute('href').replace('tel:', '').trim();
+    } else {
+      const phoneMatches = bodyText.match(phoneRegex);
+      if (phoneMatches && phoneMatches.length > 0) {
+        scraped.phone = phoneMatches[0];
+      }
+    }
+
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/g;
+    const emailMatches = bodyText.match(emailRegex);
+    if (emailMatches && emailMatches.length > 0) {
+      scraped.email = emailMatches[0];
+    }
+
+    try {
+      const domain = window.location.hostname.replace('www.', '');
+      scraped.company = domain.split('.')[0].toUpperCase();
+    } catch (e) {
+      scraped.company = 'Prospecto Web';
+    }
+
+    scraped.notes = \`Extraído de la web: \${title}\\nURL: \${url}\\n\`;
+    scraped.service = 'Prospección Web Directa';
+
+    return scraped;
+  }
+}`;
+
+      zip.file('content.js', contentJs);
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = "centinela-extension-scraper.zip";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setSuccessMessage('¡Extensión de Chrome generada y descargada exitosamente!');
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err: any) {
+      console.error('Error packaging extension:', err);
+      alert('Error empaquetando la extensión: ' + err.message);
+    } finally {
+      setIsGeneratingZip(false);
+    }
+    */
+  };
 
   // Sheets state - Clientes
   const [spreadsheetId, setSpreadsheetId] = useState<string | null>(null);
@@ -1836,6 +2692,28 @@ export default function App() {
             </div>
             {activeModule === 'api-n8n' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
           </button>
+
+          {/* Centinela Lead Extractor */}
+          <button
+            id="nav-lead-extractor"
+            onClick={() => setActiveModule('lead-extractor')}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
+              activeModule === 'lead-extractor'
+                ? 'bg-amber-500/20 text-yellow-300 border border-yellow-500/35 shadow-[0_4px_15px_rgba(245,158,11,0.15)]'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Puzzle size={18} className={activeModule === 'lead-extractor' ? 'text-yellow-400' : 'text-white/60'} />
+              <span className="flex items-center gap-1.5">
+                Lead Extractor
+                <span className="text-[8px] bg-amber-500 text-white font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wide shrink-0">
+                  NUEVO
+                </span>
+              </span>
+            </div>
+            {activeModule === 'lead-extractor' && <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.8)]" />}
+          </button>
         </nav>
 
         {/* Tarjeta Promocional: EmpresarioPuntoCom */}
@@ -2020,11 +2898,18 @@ export default function App() {
                 ? 'Tareas' 
                 : activeModule === 'api-n8n'
                 ? 'API'
+                : activeModule === 'lead-extractor'
+                ? 'Centinela Lead Extractor'
                 : 'Gastos'}
             </h2>
             
             {/* Sheet sync status pill */}
-            {activeModule === 'api-n8n' ? (
+            {activeModule === 'lead-extractor' ? (
+              <span id="lead-extractor-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 text-amber-300 text-xs font-semibold rounded-full border border-white/10 shadow-sm">
+                <Puzzle size={13} className="text-amber-300 animate-pulse" />
+                <span>Extensión Premium</span>
+              </span>
+            ) : activeModule === 'api-n8n' ? (
               <span id="api-n8n-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 shadow-sm">
                 <Cpu size={13} className="text-[#00F5D4]" />
                 <span>API de Integración</span>
@@ -4981,6 +5866,245 @@ export default function App() {
                     )}
 
                   </div>
+                </div>
+              </div>
+
+            </div>
+          ) : activeModule === 'lead-extractor' ? (
+            /* MODULE: LEAD EXTRACTOR (COMPRA DE EXTENSIÓN PREMIUM) */
+            <div className="animate-in fade-in duration-300 space-y-8">
+              
+              {/* Hero Banner Section with brand gradient matching the app */}
+              <div className="bg-gradient-to-r from-[#2E5BFF] via-[#1D9BF0] to-[#00F5D4] text-white p-8 sm:p-10 rounded-3xl shadow-[0_15px_40px_rgba(46,91,255,0.12)] border-0 relative overflow-hidden animate-in slide-in-from-top-4 duration-300">
+                {/* Decorative translucent icon */}
+                <div className="absolute -right-10 -bottom-10 w-44 h-44 text-white/5 pointer-events-none">
+                  <Puzzle size={176} />
+                </div>
+                
+                <div className="max-w-3xl relative z-10 space-y-4">
+                  <div className="inline-flex items-center space-x-2 px-3 py-1 bg-white/20 border border-white/25 text-white rounded-full text-xs font-bold uppercase tracking-wider">
+                    <Sparkles size={13} className="text-yellow-200 animate-pulse" />
+                    <span>Herramienta de Prospección de Alto Impacto</span>
+                  </div>
+                  
+                  <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-display leading-tight">
+                    Nunca te quedes sin prospectos. <br />
+                    <span className="text-yellow-100">
+                      Esta extensión los encuentra por ti.
+                    </span>
+                  </h1>
+                  
+                  <p className="text-sm sm:text-base text-white/90 leading-relaxed max-w-2xl">
+                    Multiplica tus leads calificados en tiempo récord. Centinela Lead Extractor te permite escanear e importar prospectos locales de Google Maps directamente a tu CRM con un solo clic.
+                  </p>
+                </div>
+              </div>
+
+              {/* Product Layout Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* Left Side: Product Showcase and Benefits */}
+                <div className="lg:col-span-7 space-y-6">
+                  
+                  {/* Image showcase */}
+                  <div className="bg-white rounded-3xl border border-slate-100 p-4 shadow-md overflow-hidden group hover:shadow-lg transition-all relative">
+                    <div className="absolute top-4 left-4 bg-[#2E5BFF]/10 text-[#2E5BFF] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-[#2E5BFF]/20 z-10 shadow-sm">
+                      ⭐ Centinela Lead Extractor
+                    </div>
+                    <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 p-2 flex justify-center items-center">
+                      <img 
+                        src="/Centinela_Lead_Extractor.png" 
+                        alt="Centinela Lead Extractor" 
+                        className="w-full h-auto max-h-[380px] object-contain rounded-xl transition-transform duration-500 group-hover:scale-[1.02]"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Core Benefits */}
+                  <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm space-y-6">
+                    <h3 className="font-extrabold text-slate-800 text-lg flex items-center space-x-2">
+                      <span className="p-1.5 rounded-xl bg-indigo-50 text-indigo-600">🚀</span>
+                      <span>Beneficios Exclusivos de Centinela Lead Extractor</span>
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100/80 space-y-2 hover:bg-slate-100/50 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-[#2E5BFF]/10 text-[#2E5BFF] flex items-center justify-center font-bold">
+                          🔍
+                        </div>
+                        <h4 className="font-extrabold text-slate-800 text-sm">Extractor de Google Maps</h4>
+                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                          Captura cientos de negocios locales: nombres, teléfonos oficiales, correos, sitios web y direcciones de un solo golpe.
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100/80 space-y-2 hover:bg-slate-100/50 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-[#00F5D4]/20 text-teal-600 flex items-center justify-center font-bold">
+                          ⚡
+                        </div>
+                        <h4 className="font-extrabold text-slate-800 text-sm">Sincronización Inmediata</h4>
+                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                          Guarda tus nuevos prospectos directamente en tu CRM con 1 clic o descarga los datos en formato CSV/Excel listos para usar.
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100/80 space-y-2 hover:bg-slate-100/50 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-bold">
+                          📈
+                        </div>
+                        <h4 className="font-extrabold text-slate-800 text-sm">Ventas Sin Límites</h4>
+                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                          Mantén tu embudo de ventas lleno de leads frescos todos los días sin perder horas copiando y pegando datos manualmente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Right Side: Pricing and Checkout Call to Action */}
+                <div className="lg:col-span-5 space-y-6">
+                  
+                  {/* Purchase Card */}
+                  <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-md space-y-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#2E5BFF]/5 rounded-full blur-2xl pointer-events-none" />
+                    
+                    <div className="space-y-2 text-center border-b border-slate-100 pb-5">
+                      <span className="text-[10px] font-black uppercase tracking-widest bg-[#2E5BFF]/10 text-[#2E5BFF] px-3 py-1 rounded-full inline-block border border-[#2E5BFF]/15">
+                        OFERTA DE LANZAMIENTO
+                      </span>
+                      <h3 className="font-extrabold text-xl text-slate-800">Acceso Vitalicio Premium</h3>
+                      <p className="text-xs text-slate-400">Licencia ilimitada de un solo pago</p>
+                    </div>
+
+                    {/* Bullet list of pricing details */}
+                    <ul className="space-y-3.5 text-xs text-slate-600">
+                      <li className="flex items-center space-x-2.5">
+                        <Check size={16} className="text-[#2E5BFF] shrink-0" />
+                        <span>Extracción ilimitada en Google Maps</span>
+                      </li>
+                      <li className="flex items-center space-x-2.5">
+                        <Check size={16} className="text-[#2E5BFF] shrink-0" />
+                        <span>Sincronización automatizada con tu CRM Centinela</span>
+                      </li>
+                      <li className="flex items-center space-x-2.5">
+                        <Check size={16} className="text-[#2E5BFF] shrink-0" />
+                        <span>Descarga directa a Excel / CSV habilitada</span>
+                      </li>
+                      <li className="flex items-center space-x-2.5">
+                        <Check size={16} className="text-[#2E5BFF] shrink-0" />
+                        <span>Actualizaciones constantes y mejoras gratuitas</span>
+                      </li>
+                      <li className="flex items-center space-x-2.5">
+                        <Check size={16} className="text-[#2E5BFF] shrink-0" />
+                        <span>Soporte prioritario e instalación guiada</span>
+                      </li>
+                    </ul>
+
+                    {/* PayPal Button Container */}
+                    <div className="pt-4 space-y-3">
+                      <a 
+                        href="https://www.paypal.com/ncp/payment/94XEATSYEWSJC"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-4 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-amber-500/10 hover:shadow-xl hover:shadow-amber-500/20 transition-all flex items-center justify-center space-x-2 border border-amber-300/30 text-center"
+                      >
+                        <Zap size={16} className="text-slate-950 fill-current animate-bounce" />
+                        <span>Comprar Ahora por PayPal</span>
+                      </a>
+                      
+                      <div className="flex items-center justify-center space-x-4 text-[10px] text-slate-400">
+                        <div className="flex items-center space-x-1">
+                          <span>🔒</span>
+                          <span>Pago Seguro</span>
+                        </div>
+                        <span>•</span>
+                        <div className="flex items-center space-x-1">
+                          <span>🌐</span>
+                          <span>Garantía de Satisfacción</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Secure Checkout Badges */}
+                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center justify-between gap-3 text-[10px] text-slate-500">
+                      <div className="flex items-center space-x-2 shrink-0">
+                        <svg className="w-8 h-5 text-slate-400" viewBox="0 0 36 24" fill="currentColor">
+                          <rect width="36" height="24" rx="3" fill="#1A3B8B"/>
+                          <path d="M12 8h3l-2 8h-3l2-8zm11 0h3l-2 8h-3l2-8zm-7.5.5c-.3-.3-.8-.5-1.5-.5-1.4 0-2 1-2 2s.6 2 2 2c.7 0 1.2-.2 1.5-.5l-.5-.8c-.2.2-.5.3-.8.3-.7 0-1-.4-1-1s.3-1 1-1c.3 0 .6.1.8.3l.5-.8z" fill="#FFF"/>
+                        </svg>
+                        <span>Aceptado a nivel global</span>
+                      </div>
+                      <span className="font-mono text-slate-400">PayPal Verified</span>
+                    </div>
+
+                  </div>
+
+                  {/* Trust guarantee banner */}
+                  <div className="bg-[#2E5BFF]/5 rounded-3xl border border-[#2E5BFF]/10 p-5 space-y-2 text-center">
+                    <span className="text-xl">💡</span>
+                    <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider">¿Cómo recibo mi extensión?</h4>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Inmediatamente después de completar tu pago seguro vía PayPal, nuestro sistema te proporcionará el enlace de descarga del archivo empaquetado <strong>(ZIP)</strong> preconfigurado con tu API Key de Centinela CRM listo para instalar.
+                    </p>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* Guide / How It Works Step by Step */}
+              <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="border-b border-slate-100 pb-4">
+                  <h3 className="font-extrabold text-slate-800 text-base flex items-center space-x-2">
+                    <span className="p-1.5 rounded-xl bg-indigo-50 text-indigo-600">🛠️</span>
+                    <span>¿Cómo se instala y utiliza? Tres sencillos pasos</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">Todo el proceso te tomará menos de 3 minutos</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  {/* Step 1 */}
+                  <div className="space-y-2.5 relative">
+                    <div className="absolute top-0 right-0 text-5xl font-black text-slate-100/80 -z-0">1</div>
+                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 font-extrabold flex items-center justify-center relative z-10 text-sm shadow-sm">
+                      01
+                    </div>
+                    <h4 className="font-extrabold text-slate-800 text-sm relative z-10">Descarga y Descomprime</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Al procesar tu pago, obtienes el archivo <code>centinela-extension-scraper.zip</code>. Extráelo en cualquier carpeta de tu ordenador.
+                    </p>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="space-y-2.5 relative">
+                    <div className="absolute top-0 right-0 text-5xl font-black text-slate-100/80 -z-0">2</div>
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 font-extrabold flex items-center justify-center relative z-10 text-sm shadow-sm">
+                      02
+                    </div>
+                    <h4 className="font-extrabold text-slate-800 text-sm relative z-10">Carga en Google Chrome</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Ve a <code>chrome://extensions/</code>, activa el <strong>Modo Desarrollador</strong> arriba a la derecha, haz clic en <strong>Cargar Descomprimida</strong> y selecciona la carpeta.
+                    </p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="space-y-2.5 relative">
+                    <div className="absolute top-0 right-0 text-5xl font-black text-slate-100/80 -z-0">3</div>
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 font-extrabold flex items-center justify-center relative z-10 text-sm shadow-sm">
+                      03
+                    </div>
+                    <h4 className="font-extrabold text-slate-800 text-sm relative z-10">¡Empieza a Prospectar!</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Abre Google Maps, realiza tu búsqueda de negocios locales, haz clic en el icono de la extensión en tu barra de herramientas, presiona <strong>Escanear Datos</strong> e impórtalos directo al CRM.
+                    </p>
+                  </div>
+
                 </div>
               </div>
 

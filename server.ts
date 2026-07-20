@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 
@@ -9,10 +8,6 @@ dotenv.config();
 
 const app = express();
 const PORT = 3000;
-
-// Resolve __dirname in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Database path
 const dbPath = path.join(process.cwd(), "data", "db.json");
