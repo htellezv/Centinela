@@ -77,3 +77,14 @@ export interface SheetsConfig {
   spreadsheetName: string;
 }
 
+export interface LeadExtraido {
+  id: string;
+  empresa: string;
+  contacto: string;
+  telefono: string;
+  correo: string;
+  fechaImportacion: string;
+  pais: string;
+  categoria?: string;
+}
+

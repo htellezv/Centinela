@@ -1,4 +1,4 @@
-import { Cliente, Prospecto, Venta, Gasto, Renovacion, Tarea } from './types';
+import { Cliente, Prospecto, Venta, Gasto, Renovacion, Tarea, LeadExtraido } from './types';
 
 /**
  * Exports a list of clients to a downloadable Excel-compatible CSV file
@@ -472,6 +472,61 @@ export function generateNextTareaId(tareas: Tarea[]): string {
   const nextNum = maxNum + 1;
   return `TAR-${String(nextNum).padStart(3, '0')}`;
 }
+
+/**
+ * Exports a list of leads extraidos to a downloadable Excel-compatible CSV file.
+ */
+export function exportLeadsExtraidosToCSV(leads: LeadExtraido[]) {
+  const headers = [
+    'ID',
+    'Empresa',
+    'Contacto',
+    'Teléfono',
+    'Correo',
+    'País',
+    'Fecha Importación',
+    'Categoría'
+  ];
+
+  const escapeCSVValue = (val: any) => {
+    if (val === null || val === undefined) return '';
+    let stringVal = String(val);
+    if (stringVal.includes('"') || stringVal.includes(',') || stringVal.includes('\n') || stringVal.includes('\r')) {
+      stringVal = `"${stringVal.replace(/"/g, '""')}"`;
+    }
+    return stringVal;
+  };
+
+  const csvRows = [
+    headers.join(','),
+    ...leads.map(l => [
+      escapeCSVValue(l.id),
+      escapeCSVValue(l.empresa),
+      escapeCSVValue(l.contacto),
+      escapeCSVValue(l.telefono),
+      escapeCSVValue(l.correo),
+      escapeCSVValue(l.pais),
+      escapeCSVValue(l.fechaImportacion),
+      escapeCSVValue(l.categoria || 'Varios Sectores')
+    ].join(','))
+  ];
+
+  const csvContent = '\uFEFF' + csvRows.join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  
+  const dateStr = new Date().toISOString().split('T')[0];
+  link.setAttribute('download', `Centinela_Leads_Extraidos_${dateStr}.csv`);
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 
 
 

@@ -56,7 +56,17 @@ import {
   updateTarea, 
   deleteTarea 
 } from './tareasService';
-import { Cliente, Prospecto, Venta, Gasto, Renovacion, Tarea } from './types';
+import { 
+  searchExtraccionSpreadsheet,
+  createExtraccionSpreadsheet,
+  getExtraccionLeads,
+  addExtraccionLead,
+  addExtraccionLeadsBatch,
+  updateExtraccionLead,
+  deleteExtraccionLead
+} from './extraccionService';
+import { Cliente, Prospecto, Venta, Gasto, Renovacion, Tarea, LeadExtraido } from './types';
+import * as XLSX from 'xlsx';
 import { 
   exportClientesToCSV, 
   exportProspectosToCSV,
@@ -64,6 +74,7 @@ import {
   exportGastosToCSV,
   exportRenovacionesToCSV,
   exportTareasToCSV,
+  exportLeadsExtraidosToCSV,
   generateNextId,
   generateNextProspectoId,
   generateNextVentaId,
@@ -104,6 +115,7 @@ import {
   Menu,
   UserCheck,
   Mail,
+  Inbox,
   Video,
   ChevronLeft,
   ChevronRight,
@@ -131,6 +143,7 @@ import ReminderModal from './components/ReminderModal';
 import Dashboard from './components/Dashboard';
 import SendEmailModal from './components/SendEmailModal';
 import ScheduleMeetingModal from './components/ScheduleMeetingModal';
+import ExtraccionCentinela from './components/ExtraccionCentinela';
 
 export default function App() {
   // Auth state
@@ -140,7 +153,27 @@ export default function App() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Active module
-  const [activeModule, setActiveModule] = useState<'dashboard' | 'clientes' | 'prospectos' | 'ventas' | 'gastos' | 'renovaciones' | 'tareas' | 'api-n8n' | 'lead-extractor'>('dashboard');
+  const [activeModule, setActiveModule] = useState<'dashboard' | 'clientes' | 'prospectos' | 'ventas' | 'gastos' | 'renovaciones' | 'tareas' | 'api-n8n' | 'lead-extractor' | 'extraccion-centinela'>('dashboard');
+  
+  // Extracción Centinela States
+  const [leadsExtraidos, setLeadsExtraidos] = useState<LeadExtraido[]>(() => {
+    try {
+      const saved = localStorage.getItem('centinela_leads_extraidos');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const saveLeadsExtraidos = (leads: LeadExtraido[]) => {
+    setLeadsExtraidos(leads);
+    localStorage.setItem('centinela_leads_extraidos', JSON.stringify(leads));
+  };
+
+  const [leadsSearchQuery, setLeadsSearchQuery] = useState('');
+  const [leadsPaisFilter, setLeadsPaisFilter] = useState('Todos');
+  const [leadsPage, setLeadsPage] = useState(1);
+  const [leadsPerPage, setLeadsPerPage] = useState(10);
   const [isSyncingWithApi, setIsSyncingWithApi] = useState(false);
   const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(localStorage.getItem('centinela_last_sync_time'));
   const [apiConfigKey, setApiConfigKey] = useState<string>('');
@@ -1063,6 +1096,10 @@ export default function App() {
   const [tareasSpreadsheetName, setTareasSpreadsheetName] = useState<string>('');
   const [tareas, setTareas] = useState<Tarea[]>([]);
 
+  // Sheets state - Extracción Centinela
+  const [extraccionSpreadsheetId, setExtraccionSpreadsheetId] = useState<string | null>(null);
+  const [extraccionSpreadsheetName, setExtraccionSpreadsheetName] = useState<string>('');
+
   // Common sheet states
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
@@ -1324,6 +1361,32 @@ export default function App() {
         setTareasSpreadsheetId(null);
         setTareasSpreadsheetName('');
         setTareas([]);
+      }
+
+      // 7. Load Extracción Centinela
+      try {
+        const extFile = await searchExtraccionSpreadsheet(accessToken);
+        if (extFile) {
+          setExtraccionSpreadsheetId(extFile.id);
+          setExtraccionSpreadsheetName(extFile.name);
+          const listLeads = await getExtraccionLeads(accessToken, extFile.id);
+          
+          // Merge with any local leads
+          const localLeads = [...leadsExtraidos];
+          const mergedLeads = [...listLeads];
+          localLeads.forEach(localL => {
+            if (!mergedLeads.some(l => l.id === localL.id)) {
+              mergedLeads.push(localL);
+            }
+          });
+          setLeadsExtraidos(mergedLeads);
+          localStorage.setItem('centinela_leads_extraidos', JSON.stringify(mergedLeads));
+        } else {
+          setExtraccionSpreadsheetId(null);
+          setExtraccionSpreadsheetName('');
+        }
+      } catch (extErr) {
+        console.error('Error loading Extracción Centinela sheet:', extErr);
       }
 
       // Trigger automatic bidirectional sync with backend Express API cache (for n8n support)
@@ -1652,6 +1715,32 @@ export default function App() {
     }
   };
 
+  // Create a new spreadsheet for Extracción Centinela
+  const handleCreateExtraccionSheet = async () => {
+    if (!token) return;
+    setIsCreatingSheet(true);
+    setError(null);
+    try {
+      const newSheet = await createExtraccionSpreadsheet(token);
+      setExtraccionSpreadsheetId(newSheet.id);
+      setExtraccionSpreadsheetName(newSheet.name);
+      showToast('Hoja de Google Sheets "Extracción Centinela" creada exitosamente.');
+      
+      // If there are existing local leads, batch-upload them to the newly created spreadsheet
+      if (leadsExtraidos.length > 0) {
+        await addExtraccionLeadsBatch(token, newSheet.id, leadsExtraidos);
+      }
+      
+      const list = await getExtraccionLeads(token, newSheet.id);
+      setLeadsExtraidos(list);
+    } catch (err: any) {
+      console.error(err);
+      setError('Error al crear la hoja de cálculo de Extracción Centinela. Intente nuevamente.');
+    } finally {
+      setIsCreatingSheet(false);
+    }
+  };
+
   // Google Sign-in Handler
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -1687,6 +1776,7 @@ export default function App() {
       setGastos([]);
       setRenovacionesSpreadsheetId(null);
       setRenovaciones([]);
+      setExtraccionSpreadsheetId(null);
       setNeedsAuth(true);
     } catch (err) {
       console.error('Logout error:', err);
@@ -1772,6 +1862,60 @@ export default function App() {
     } catch (err: any) {
       console.error(err);
       throw new Error(err?.message || 'Error al guardar los datos.');
+    }
+  };
+
+  // Convert Extracted Lead into a Prospect
+  const handleConvertToProspecto = async (lead: LeadExtraido, customFields?: Partial<Prospecto>) => {
+    if (!token || !prospectosSpreadsheetId) {
+      showToast('Por favor, conecta la base de datos de Prospectos primero.');
+      return;
+    }
+
+    try {
+      // Calculate next ID using existing helper
+      const nextId = generateNextProspectoId(prospectos);
+
+      const nuevoProspecto: Prospecto = {
+        id: nextId,
+        pais: customFields?.pais || lead.pais || '',
+        tipoIdentificacion: customFields?.tipoIdentificacion || '',
+        numeroIdentificacion: customFields?.numeroIdentificacion || '',
+        empresa: customFields?.empresa || lead.empresa,
+        contacto: customFields?.contacto || lead.contacto || 'Contacto Principal',
+        telefono: customFields?.telefono || lead.telefono,
+        correo: customFields?.correo || lead.correo,
+        servicioInteres: customFields?.servicioInteres || 'Por definir',
+        valorEstimado: customFields?.valorEstimado || '0',
+        estado: customFields?.estado || 'Nuevo',
+        ultimoContacto: customFields?.ultimoContacto || new Date().toISOString().split('T')[0],
+        proximoSeguimiento: customFields?.proximoSeguimiento || '',
+        observaciones: customFields?.observaciones || `Lead importado desde Extracción Centinela${lead.categoria ? ` - Categoría: ${lead.categoria}` : ''}`,
+      };
+
+      await addProspecto(token, prospectosSpreadsheetId, nuevoProspecto);
+      showToast(`¡Lead "${nuevoProspecto.empresa}" convertido en prospecto exitosamente!`);
+
+      // Auto-refresh prospectos list
+      const list = await getProspectos(token, prospectosSpreadsheetId);
+      setProspectos(list);
+
+      // Remove from Google Sheets if connected
+      if (extraccionSpreadsheetId) {
+        try {
+          await deleteExtraccionLead(token, extraccionSpreadsheetId, lead.id);
+        } catch (sheetDelErr) {
+          console.error('Error deleting lead from Google Sheet during conversion:', sheetDelErr);
+        }
+      }
+
+      // Remove from leadsExtraidos list and save
+      const updatedLeads = leadsExtraidos.filter(l => l.id !== lead.id);
+      saveLeadsExtraidos(updatedLeads);
+    } catch (err: any) {
+      console.error(err);
+      showToast('Error al convertir el lead en prospecto: ' + err.message);
+      throw err;
     }
   };
 
@@ -2608,113 +2752,130 @@ export default function App() {
               {activeModule === 'prospectos' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
             </button>
 
-          {/* Ventas (ENABLED) */}
-          <button
-            id="nav-ventas"
-            onClick={() => setActiveModule('ventas')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
-              activeModule === 'ventas'
-                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <TrendingUp size={18} className={activeModule === 'ventas' ? 'text-white' : 'text-white/60'} />
-              <span>Ventas</span>
-            </div>
-            {activeModule === 'ventas' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
-          </button>
+            {/* Extracción Centinela */}
+            <button
+              id="nav-extraccion-centinela"
+              onClick={() => setActiveModule('extraccion-centinela')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
+                activeModule === 'extraccion-centinela'
+                  ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Inbox size={18} className={activeModule === 'extraccion-centinela' ? 'text-white' : 'text-white/60'} />
+                <span>Extracción Centinela</span>
+              </div>
+              {activeModule === 'extraccion-centinela' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+            </button>
 
-          {/* Gastos (ENABLED) */}
-          <button
-            id="nav-gastos"
-            onClick={() => setActiveModule('gastos')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
-              activeModule === 'gastos'
-                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <Receipt size={18} className={activeModule === 'gastos' ? 'text-white' : 'text-white/60'} />
-              <span>Gastos</span>
-            </div>
-            {activeModule === 'gastos' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
-          </button>
+            {/* Ventas (ENABLED) */}
+            <button
+              id="nav-ventas"
+              onClick={() => setActiveModule('ventas')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
+                activeModule === 'ventas'
+                  ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <TrendingUp size={18} className={activeModule === 'ventas' ? 'text-white' : 'text-white/60'} />
+                <span>Ventas</span>
+              </div>
+              {activeModule === 'ventas' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+            </button>
 
-          {/* Renovaciones (ENABLED) */}
-          <button
-            id="nav-renovaciones"
-            onClick={() => setActiveModule('renovaciones')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
-              activeModule === 'renovaciones'
-                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <Calendar size={18} className={activeModule === 'renovaciones' ? 'text-white' : 'text-white/60'} />
-              <span>Renovaciones</span>
-            </div>
-            {activeModule === 'renovaciones' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
-          </button>
+            {/* Gastos (ENABLED) */}
+            <button
+              id="nav-gastos"
+              onClick={() => setActiveModule('gastos')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
+                activeModule === 'gastos'
+                  ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Receipt size={18} className={activeModule === 'gastos' ? 'text-white' : 'text-white/60'} />
+                <span>Gastos</span>
+              </div>
+              {activeModule === 'gastos' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+            </button>
 
-          {/* Tareas (ENABLED) */}
-          <button
-            id="nav-tareas"
-            onClick={() => setActiveModule('tareas')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
-              activeModule === 'tareas'
-                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <CheckSquare size={18} className={activeModule === 'tareas' ? 'text-white' : 'text-white/60'} />
-              <span>Tareas</span>
-            </div>
-            {activeModule === 'tareas' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
-          </button>
+            {/* Renovaciones (ENABLED) */}
+            <button
+              id="nav-renovaciones"
+              onClick={() => setActiveModule('renovaciones')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
+                activeModule === 'renovaciones'
+                  ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Calendar size={18} className={activeModule === 'renovaciones' ? 'text-white' : 'text-white/60'} />
+                <span>Renovaciones</span>
+              </div>
+              {activeModule === 'renovaciones' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+            </button>
 
-          {/* API para n8n */}
-          <button
-            id="nav-api-n8n"
-            onClick={() => setActiveModule('api-n8n')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
-              activeModule === 'api-n8n'
-                ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <Cpu size={18} className={activeModule === 'api-n8n' ? 'text-white' : 'text-white/60'} />
-              <span>API</span>
-            </div>
-            {activeModule === 'api-n8n' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
-          </button>
+            {/* Tareas (ENABLED) */}
+            <button
+              id="nav-tareas"
+              onClick={() => setActiveModule('tareas')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
+                activeModule === 'tareas'
+                  ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <CheckSquare size={18} className={activeModule === 'tareas' ? 'text-white' : 'text-white/60'} />
+                <span>Tareas</span>
+              </div>
+              {activeModule === 'tareas' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+            </button>
 
-          {/* Centinela Lead Extractor */}
-          <button
-            id="nav-lead-extractor"
-            onClick={() => setActiveModule('lead-extractor')}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
-              activeModule === 'lead-extractor'
-                ? 'bg-amber-500/20 text-yellow-300 border border-yellow-500/35 shadow-[0_4px_15px_rgba(245,158,11,0.15)]'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <Puzzle size={18} className={activeModule === 'lead-extractor' ? 'text-yellow-400' : 'text-white/60'} />
-              <span className="flex items-center gap-1.5">
-                Lead Extractor
-                <span className="text-[8px] bg-amber-500 text-white font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wide shrink-0">
-                  NUEVO
+            {/* Centinela Lead Extractor */}
+            <button
+              id="nav-lead-extractor"
+              onClick={() => setActiveModule('lead-extractor')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
+                activeModule === 'lead-extractor'
+                  ? 'bg-amber-500/20 text-yellow-300 border border-yellow-500/35 shadow-[0_4px_15px_rgba(245,158,11,0.15)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Puzzle size={18} className={activeModule === 'lead-extractor' ? 'text-yellow-400' : 'text-white/60'} />
+                <span className="flex items-center gap-1.5">
+                  Lead Extractor
+                  <span className="text-[8px] bg-amber-500 text-white font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wide shrink-0">
+                    NUEVO
+                  </span>
                 </span>
-              </span>
-            </div>
-            {activeModule === 'lead-extractor' && <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.8)]" />}
-          </button>
-        </nav>
+              </div>
+              {activeModule === 'lead-extractor' && <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.8)]" />}
+            </button>
+
+            {/* API para n8n */}
+            <button
+              id="nav-api-n8n"
+              onClick={() => setActiveModule('api-n8n')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 ${
+                activeModule === 'api-n8n'
+                  ? 'bg-white/15 text-white border border-white/20 shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Cpu size={18} className={activeModule === 'api-n8n' ? 'text-white' : 'text-white/60'} />
+                <span>API</span>
+              </div>
+              {activeModule === 'api-n8n' && <span className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+            </button>
+          </nav>
 
         {/* Tarjeta Promocional: EmpresarioPuntoCom */}
         <div className="hidden lg:block mx-4 my-2 relative group transition-all duration-300">
@@ -2900,11 +3061,41 @@ export default function App() {
                 ? 'API'
                 : activeModule === 'lead-extractor'
                 ? 'Centinela Lead Extractor'
+                : activeModule === 'extraccion-centinela'
+                ? 'Extracción Centinela'
                 : 'Gastos'}
             </h2>
             
             {/* Sheet sync status pill */}
-            {activeModule === 'lead-extractor' ? (
+            {activeModule === 'extraccion-centinela' ? (
+              extraccionSpreadsheetId ? (
+                <div className="flex items-center space-x-2 shrink-0">
+                  <span id="extraccion-centinela-badge" className="hidden sm:flex items-center space-x-1.5 px-3 py-1 bg-indigo-500/15 text-indigo-300 text-xs font-semibold rounded-full border border-indigo-500/25 shadow-sm">
+                    <span>📥</span>
+                    <span>Bandeja de Leads</span>
+                  </span>
+                  <a
+                    href={`https://docs.google.com/spreadsheets/d/${extraccionSpreadsheetId}/edit`}
+                    target="_blank"
+                    rel="noreferrer"
+                    id="connected-extraccion-sheet-badge"
+                    className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 hover:bg-white/15 text-[#00F5D4] text-xs font-semibold rounded-full border border-white/10 transition-all shrink-0 shadow-sm"
+                    title="Abrir hoja de Google Sheets de Extracción Centinela en nueva pestaña"
+                  >
+                    <FileSpreadsheet size={13} className="text-[#00F5D4]" />
+                    <span className="truncate max-w-[120px] sm:max-w-[180px]">Google Sheets: "{extraccionSpreadsheetName || 'Extracción Centinela'}"</span>
+                    <ExternalLink size={10} className="opacity-70" />
+                  </a>
+                </div>
+              ) : (
+                !isLoading && (
+                  <span id="no-extraccion-sheet-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-rose-500/15 text-rose-400 text-xs font-semibold rounded-full border border-rose-500/25">
+                    <Database size={13} className="text-rose-400" />
+                    <span>Sin sincronizar</span>
+                  </span>
+                )
+              )
+            ) : activeModule === 'lead-extractor' ? (
               <span id="lead-extractor-badge" className="flex items-center space-x-1.5 px-3 py-1 bg-white/10 text-amber-300 text-xs font-semibold rounded-full border border-white/10 shadow-sm">
                 <Puzzle size={13} className="text-amber-300 animate-pulse" />
                 <span>Extensión Premium</span>
@@ -3091,7 +3282,8 @@ export default function App() {
               (activeModule === 'ventas' && ventasSpreadsheetId) ||
               (activeModule === 'gastos' && gastosSpreadsheetId) ||
               (activeModule === 'renovaciones' && renovacionesSpreadsheetId) ||
-              (activeModule === 'tareas' && tareasSpreadsheetId)) && (
+              (activeModule === 'tareas' && tareasSpreadsheetId) ||
+              (activeModule === 'extraccion-centinela' && extraccionSpreadsheetId)) && (
               <button
                 id="refresh-data-btn"
                 onClick={() => loadSpreadsheetData(token!)}
@@ -3376,6 +3568,64 @@ export default function App() {
                 </div>
               )}
             </div>
+          ) : activeModule === 'extraccion-centinela' && !extraccionSpreadsheetId ? (
+            /* SPREADSHEET DISCOVERY BANNER (WIZARD) FOR EXTRACCION CENTINELA */
+            <div 
+              id="extraccion-sheet-wizard-card"
+              className="max-w-2xl mx-auto mt-8 bg-white p-8 rounded-3xl shadow-xl shadow-slate-100 border border-slate-100 flex flex-col items-center text-center animate-in fade-in-50 duration-300"
+            >
+              <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl mb-5">
+                <FileSpreadsheet size={40} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 font-display">Conectar Base de Datos de Extracción Centinela</h3>
+              <p className="text-slate-500 text-sm mt-2 max-w-md leading-relaxed">
+                Para almacenar automáticamente tus leads extraídos en una Google Sheet, necesitamos una hoja de cálculo dedicada llamada <strong>"Extracción Centinela"</strong> en tu Drive. Si no existe, la crearemos por ti.
+              </p>
+
+              {isLoading ? (
+                <div className="mt-8 flex flex-col items-center space-y-3">
+                  <svg className="animate-spin h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span className="text-xs font-medium text-slate-500">Buscando hoja en Google Drive...</span>
+                </div>
+              ) : (
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <button
+                    id="find-extraccion-sheet-btn"
+                    onClick={() => loadSpreadsheetData(token!)}
+                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm rounded-xl transition-all"
+                  >
+                    Buscar Hoja "Extracción Centinela"
+                  </button>
+                  <button
+                    id="create-extraccion-sheet-btn"
+                    onClick={handleCreateExtraccionSheet}
+                    disabled={isCreatingSheet}
+                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl transition-all shadow-sm shadow-emerald-600/10 flex items-center justify-center min-w-[200px]"
+                  >
+                    {isCreatingSheet ? 'Creando Hoja...' : 'Crear Nueva Hoja "Extracción Centinela"'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : activeModule === 'extraccion-centinela' ? (
+            <ExtraccionCentinela
+              leadsExtraidos={leadsExtraidos}
+              onSaveLeads={saveLeadsExtraidos}
+              onConvertToProspecto={handleConvertToProspecto}
+              setIntegrationModalInfo={setIntegrationModalInfo}
+              isProspectsConnected={!!prospectosSpreadsheetId}
+              token={token}
+              extraccionSpreadsheetId={extraccionSpreadsheetId}
+              onRefreshLeads={async () => {
+                if (token && extraccionSpreadsheetId) {
+                  const list = await getExtraccionLeads(token, extraccionSpreadsheetId);
+                  setLeadsExtraidos(list);
+                }
+              }}
+            />
           ) : activeModule === 'dashboard' ? (
             <Dashboard
               clientes={clientes}
