@@ -85,6 +85,23 @@ const SECTORES_PREDEFINIDOS = [
   'Otro Sector'
 ];
 
+// Helper functions to clean empresa names and phone numbers
+export const cleanEmpresaName = (rawName: string): string => {
+  if (!rawName) return '';
+  let cleaned = String(rawName).trim();
+  // Remove "Enlace visitado" and variants like "·Enlace visitado", " - Enlace visitado", " | Enlace visitado", "visited link", etc.
+  cleaned = cleaned
+    .replace(/[·\-\|\u00B7\.]?\s*(enlace\s+visitado|visited\s+link)/gi, '')
+    .trim();
+  return cleaned;
+};
+
+export const cleanPhoneNumber = (rawPhone: string): string => {
+  if (!rawPhone) return '';
+  // Strip all non-digit characters (no '+' or symbols)
+  return String(rawPhone).replace(/[^\d]/g, '');
+};
+
 export default function ExtraccionCentinela({
   leadsExtraidos,
   onSaveLeads,
@@ -337,7 +354,7 @@ export default function ExtraccionCentinela({
       const categoriaRaw = row.Categoría || row.category || row.categoria || row.Category || row.Sector || row.sector || '';
 
       // Normalize string checks
-      const empresa = String(empresaRaw).trim();
+      const empresa = cleanEmpresaName(String(empresaRaw));
       const telefono = String(telefonoRaw).trim();
       const correo = String(correoRaw).trim();
       const contacto = String(contactoRaw).trim();
@@ -355,22 +372,17 @@ export default function ExtraccionCentinela({
       }
 
       // Validate phone length (Must be at least 7 digits after strip)
-      const numericDigits = telefono.replace(/[^\d]/g, '');
+      const numericDigits = cleanPhoneNumber(telefono);
       if (numericDigits.length < 7) {
         errorCount++;
         return;
       }
 
-      // Format telephone internationally
-      let formattedPhone = telefono.replace(/[^\d+]/g, ''); // keep only digits and '+'
-      if (!formattedPhone.startsWith('+')) {
-        const numericPrefix = countryPrefix.replace('+', '');
-        // If it already starts with the numeric prefix and is full length, prepend '+'
-        if (formattedPhone.startsWith(numericPrefix) && formattedPhone.length > 8) {
-          formattedPhone = '+' + formattedPhone;
-        } else {
-          formattedPhone = countryPrefix + formattedPhone;
-        }
+      // Format telephone internationally without '+'
+      const numericPrefix = countryPrefix.replace(/[^\d]/g, '');
+      let formattedPhone = numericDigits;
+      if (!formattedPhone.startsWith(numericPrefix) || formattedPhone.length <= 8) {
+        formattedPhone = numericPrefix + formattedPhone;
       }
 
       // Validate email format if present
@@ -386,7 +398,7 @@ export default function ExtraccionCentinela({
 
       // Check for duplicates in current CRM state, imported list, and batch
       const isDuplicate = 
-        currentLeads.some(l => l.telefono === formattedPhone || (formattedEmail && l.correo === formattedEmail)) ||
+        currentLeads.some(l => cleanPhoneNumber(l.telefono) === formattedPhone || (formattedEmail && l.correo === formattedEmail)) ||
         newLeadsList.some(l => l.telefono === formattedPhone || (formattedEmail && l.correo === formattedEmail));
 
       if (isDuplicate) {
@@ -451,14 +463,17 @@ export default function ExtraccionCentinela({
     setIsDeleting(true);
     try {
       if (token && extraccionSpreadsheetId) {
-        await deleteExtraccionLead(token, extraccionSpreadsheetId, leadToDelete.id);
+        try {
+          await deleteExtraccionLead(token, extraccionSpreadsheetId, leadToDelete.id);
+        } catch (sheetErr) {
+          console.warn('No se pudo eliminar de Google Sheets (se procede a eliminar localmente):', sheetErr);
+        }
       }
       const updated = leadsExtraidos.filter(l => l.id !== leadToDelete.id);
       onSaveLeads(updated);
       setLeadToDelete(null);
     } catch (err) {
-      console.error('Error deleting lead from Google Sheets:', err);
-      alert('Error al eliminar de Google Sheets. Intenta nuevamente.');
+      console.error('Error al eliminar el lead:', err);
     } finally {
       setIsDeleting(false);
     }
@@ -466,7 +481,11 @@ export default function ExtraccionCentinela({
 
   // Open Edit Modal
   const handleOpenEdit = (lead: LeadExtraido) => {
-    setEditingLead({ ...lead });
+    setEditingLead({ 
+      ...lead,
+      empresa: cleanEmpresaName(lead.empresa),
+      telefono: cleanPhoneNumber(lead.telefono)
+    });
     setIsEditModalOpen(true);
   };
 
@@ -475,28 +494,40 @@ export default function ExtraccionCentinela({
     e.preventDefault();
     if (!editingLead) return;
 
-    if (!editingLead.empresa.trim()) {
+    const cleanedEmpresa = cleanEmpresaName(editingLead.empresa);
+    const cleanedTelefono = cleanPhoneNumber(editingLead.telefono);
+
+    if (!cleanedEmpresa.trim()) {
       alert('El nombre de la empresa es obligatorio.');
       return;
     }
 
-    if (!editingLead.telefono.trim()) {
+    if (!cleanedTelefono.trim()) {
       alert('El teléfono es obligatorio.');
       return;
     }
 
+    const updatedLead: LeadExtraido = {
+      ...editingLead,
+      empresa: cleanedEmpresa,
+      telefono: cleanedTelefono
+    };
+
     setIsSavingEdit(true);
     try {
       if (token && extraccionSpreadsheetId) {
-        await updateExtraccionLead(token, extraccionSpreadsheetId, editingLead);
+        try {
+          await updateExtraccionLead(token, extraccionSpreadsheetId, updatedLead);
+        } catch (sheetErr) {
+          console.warn('No se pudo actualizar en Google Sheets (se actualizó localmente):', sheetErr);
+        }
       }
-      const updated = leadsExtraidos.map(l => l.id === editingLead.id ? editingLead : l);
+      const updated = leadsExtraidos.map(l => l.id === updatedLead.id ? updatedLead : l);
       onSaveLeads(updated);
       setIsEditModalOpen(false);
       setEditingLead(null);
     } catch (err) {
-      console.error('Error updating lead on Google Sheets:', err);
-      alert('Error al guardar los cambios en Google Sheets. Intenta nuevamente.');
+      console.error('Error updating lead:', err);
     } finally {
       setIsSavingEdit(false);
     }
@@ -513,9 +544,9 @@ export default function ExtraccionCentinela({
     
     // Prefill Wizard details
     setWizardLead(lead);
-    setWizardEmpresa(lead.empresa);
+    setWizardEmpresa(cleanEmpresaName(lead.empresa));
     setWizardContacto(lead.contacto || '');
-    setWizardTelefono(lead.telefono);
+    setWizardTelefono(cleanPhoneNumber(lead.telefono));
     setWizardCorreo(lead.correo || '');
     setWizardPais(lead.pais || '');
     setWizardServicioInteres(lead.categoria || 'Varios Sectores');
@@ -799,7 +830,7 @@ export default function ExtraccionCentinela({
                   <tr key={lead.id} className="hover:bg-slate-50/75 group transition-colors">
                     {/* Empresa */}
                     <td className="py-3 px-4">
-                      <div className="font-bold text-slate-800">{lead.empresa}</div>
+                      <div className="font-bold text-slate-800">{cleanEmpresaName(lead.empresa)}</div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5">{lead.id} • Importado {lead.fechaImportacion}</div>
                     </td>
 
@@ -822,7 +853,7 @@ export default function ExtraccionCentinela({
 
                     {/* Teléfono */}
                     <td className="py-3 px-4 font-mono font-semibold text-slate-800">
-                      {lead.telefono}
+                      {cleanPhoneNumber(lead.telefono)}
                     </td>
 
                     {/* Correo */}
@@ -852,8 +883,8 @@ export default function ExtraccionCentinela({
                             setIntegrationModalInfo({ 
                               isOpen: true, 
                               type: 'llamada', 
-                              contactName: lead.contacto || lead.empresa,
-                              phone: lead.telefono,
+                              contactName: lead.contacto || cleanEmpresaName(lead.empresa),
+                              phone: cleanPhoneNumber(lead.telefono),
                               asunto: `Llamada de prospección comercial inicial`,
                               valor: '0',
                               originalRecord: lead
@@ -872,9 +903,9 @@ export default function ExtraccionCentinela({
                             setIntegrationModalInfo({ 
                               isOpen: true, 
                               type: 'whatsapp', 
-                              contactName: lead.contacto || lead.empresa,
-                              phone: lead.telefono,
-                              asunto: `Hola ${lead.contacto || lead.empresa}, un gusto saludarte. Te escribimos de parte de Centinela para presentarte nuestras soluciones...`,
+                              contactName: lead.contacto || cleanEmpresaName(lead.empresa),
+                              phone: cleanPhoneNumber(lead.telefono),
+                              asunto: `Hola ${lead.contacto || cleanEmpresaName(lead.empresa)}, un gusto saludarte. Te escribimos de parte de Centinela para presentarte nuestras soluciones...`,
                               valor: '0',
                               originalRecord: lead
                             });
@@ -1515,7 +1546,7 @@ export default function ExtraccionCentinela({
             {/* Body */}
             <div className="p-6">
               <p className="text-sm text-slate-600 leading-relaxed">
-                ¿Estás seguro de que deseas eliminar permanentemente a <strong>{leadToDelete.empresa}</strong>? Esta acción borrará su registro de forma irreversible.
+                ¿Estás seguro de que deseas eliminar permanentemente a <strong>{cleanEmpresaName(leadToDelete.empresa)}</strong>? Esta acción borrará su registro de forma irreversible.
               </p>
             </div>
 
